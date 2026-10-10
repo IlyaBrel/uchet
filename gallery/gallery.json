@@ -1,0 +1,78 @@
+{
+ "version": 1,
+ "items": [
+  {
+   "file": "gallery/bosch-gas-35.jpg",
+   "name": "Пылесос строительный Bosch GAS 35 L AFC",
+   "ar": "مكنسة كهربائية للبناء Bosch GAS 35 L AFC",
+   "kw": [
+    "пылесос"
+   ]
+  },
+  {
+   "file": "gallery/bosch-gbh-8-45.jpg",
+   "name": "Перфоратор Bosch GBH 8-45 D",
+   "ar": "مثقاب Bosch GBH 8-45 D",
+   "kw": [
+    "перфоратор"
+   ]
+  },
+  {
+   "file": "gallery/bosch-mixer.jpg",
+   "name": "Миксер строительный Bosch",
+   "ar": "خلاط بناء Bosch",
+   "kw": [
+    "миксер",
+    "мешалка"
+   ]
+  },
+  {
+   "file": "gallery/patriot-heater.jpg",
+   "name": "Тепловая пушка Patriot",
+   "ar": "مدفع حراري كهربائي Patriot",
+   "kw": [
+    "тепловая пушка",
+    "пушка",
+    "обогреватель",
+    "тепловентилятор"
+   ]
+  },
+  {
+   "file": "gallery/hilti-dgh-130.jpg",
+   "name": "Шлифмашина по бетону Hilti DGH 130",
+   "ar": "آلة جلخ الخرسانة Hilti DGH 130",
+   "kw": [
+    "шлифмашина hilti",
+    "dgh"
+   ]
+  },
+  {
+   "file": "gallery/hilti-te-700.jpg",
+   "name": "Отбойный молоток Hilti TE 700-AVR",
+   "ar": "مطرقة تكسير Hilti TE 700-AVR",
+   "kw": [
+    "отбойный",
+    "отбойник",
+    "te 700"
+   ]
+  },
+  {
+   "file": "gallery/bosch-gbr-15.jpg",
+   "name": "Шлифмашина по бетону Bosch GBR 15 CA",
+   "ar": "آلة جلخ الخرسانة Bosch GBR 15 CA",
+   "kw": [
+    "шлифмашина bosch",
+    "gbr"
+   ]
+  },
+  {
+   "file": "gallery/hilti-ag-125.jpg",
+   "name": "Болгарка Hilti AG 125-15DB",
+   "ar": "جلّاخة Hilti AG 125-15DB",
+   "kw": [
+    "болгарка",
+    "ушм"
+   ]
+  }
+ ]
+}
