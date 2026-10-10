@@ -472,6 +472,15 @@ details.more{margin-bottom:10px}details.more summary{font-weight:750;color:var(-
 .gali img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:10px;background:var(--soft)}
 .gali b{font-size:12px;font-weight:750;line-height:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .xd{background:var(--card);border:1.5px solid var(--line);border-radius:15px;padding:10px;margin-bottom:8px}
+.betab{position:absolute;margin-inline-start:30px;margin-top:-4px;font-style:normal;font-size:10px;font-weight:900;background:#12161c;color:var(--sig);border-radius:6px;padding:0 4px;line-height:15px}
+.tabs button{position:relative}
+.sub .own{font-weight:800;color:var(--ink)}
+#updbar{position:fixed;left:10px;right:10px;top:calc(8px + env(safe-area-inset-top));z-index:130;display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:16px;background:#12161c;color:#fff;font-weight:700;font-size:14px;box-shadow:0 12px 30px -10px rgba(0,0,0,.6);animation:up .35s var(--ease)}
+#updbar span{flex:1;text-align:start}#updbar b{background:var(--sig);color:#12161c;border-radius:10px;padding:6px 12px;font-weight:850}
+.wnew{display:flex;flex-direction:column;gap:10px;margin-bottom:16px}
+.wnewi{display:flex;gap:12px;align-items:flex-start;background:var(--card);border:1.5px solid var(--line);border-radius:16px;padding:12px}
+.wnewi span{width:38px;height:38px;border-radius:12px;background:var(--sig);color:#12161c;display:grid;place-items:center;flex:none}
+.wnewi p{margin:0;font-size:14.5px;line-height:1.45}
 ::view-transition-old(root),::view-transition-new(root){animation-duration:.22s}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important}}
 </style>
@@ -491,6 +500,7 @@ details.more{margin-bottom:10px}details.more summary{font-weight:750;color:var(-
 <div id="toast"></div>
 <datalist id="wl"></datalist><datalist id="tnl"></datalist>
 
+<script src="plan.js"></script>
 <script>
 'use strict';
 /* ================= helpers ================= */
@@ -559,6 +569,7 @@ const IC={
  layers:'<polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/>',
  alert:'<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>',
  nariad:'<path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><polyline points="9 14 11 16 15 12"/>',
+ plan:'<path d="M3 3h18v18H3z"/><path d="M3 12h9V3"/><path d="M12 12v9"/>',
  ruler:'<path d="M21.3 8.7 8.7 21.3a1 1 0 0 1-1.4 0l-4.6-4.6a1 1 0 0 1 0-1.4L15.3 2.7a1 1 0 0 1 1.4 0l4.6 4.6a1 1 0 0 1 0 1.4z"/><path d="m7.5 10.5 2 2"/><path d="m10.5 7.5 2 2"/><path d="m13.5 4.5 2 2"/><path d="m4.5 13.5 2 2"/>'
 };
 const ic=(n,s=20)=>`<svg class="ic ${n==='chev'||n==='chevl'?'chev':''}" width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${IC[n]}</svg>`;
@@ -648,6 +659,23 @@ L.ru={
  ext_title:'Отчёт другого человека',ext_sub:'Когда вы на выходном — его объёмы войдут в итоги',ext_author:'Чей отчёт',ext_ph:'Вставьте текст отчёта из WhatsApp (можно сразу за несколько дней)',ext_people:'Людей',ext_save:n=>`Сохранить (${n})`,ext_saved:n=>`Сохранено отчётов: ${n}`,ext_by:n=>'отчёт: '+n,s_ext:n=>`Включая отчёты других людей: ${n}`,arch_day:'День',
  share_people:'Поделиться людьми',sel_n:n=>`Выбрано: ${n}`,sel_all:'Все',share_file:'Файлом',share_text:'Списком',people_file_title:'Люди из учёта',imp_people_done:n=>`Добавлено/обновлено людей: ${n}`,restore_or_people_sub:'Файл копии или файл с людьми',
  trans:'Переводы на арабский',trans_sub:'Работы, разделы, профессии, инструмент',trans_hint:'Пустое поле — используется встроенный перевод (серым), если он есть. Кнопка G открывает Google Переводчик (нужен интернет).',trans_missing:'Без перевода',kind_w:'работа',kind_u:'единица',kind_s:'раздел',kind_p:'профессия',kind_t:'инструмент',kind_r:'должность',kind_n:'наряд',name_ar:'На арабском',
+ f_owner:'В чьей группе',ph_owner:'Например: Иванова',hint_owner:'Укажите бригадира или мастера, у которого сейчас этот человек.',grp_of:n=>'Группа: '+n,grp_none:'Группа не указана',
+ hint_group2:'Выберите «Нет», если человек в другой группе — ниже укажите, в чьей. В базе он останется, в списке будет серым.',
+ my_name:'Моё имя',my_name_ph:'Например: Брель И.',my_name_hint:'Нужно для обмена людьми: получатель увидит, из чьей группы люди.',
+ imp_from_q:(n,c)=>`Люди из группы «${n}» · ${c}`,imp_from_t:'Куда их записать?',imp_to_mine:'В мою группу',imp_keep:n=>`Оставить в группе «${n}»`,
+ snaps:'Автокопии в телефоне',snaps_sub:n=>n?`Есть за ${n} дн. · без фото`:'Первая появится сегодня',
+ snaps_intro:'Каждый день приложение само сохраняет копию данных внутри телефона (последние 7 дней). Если что-то случайно удалили или испортили — можно вернуться. Фото в копию не входят: при возврате остаются текущие фото.',
+ snaps_none:'Автокопий пока нет',snap_pre:'перед возвратом',snap_now:'Сохранить автокопию сейчас',snap_saved:'Автокопия сохранена',
+ snap_restore_q:d=>`Вернуть данные на ${d}?`,snap_restore_t:'Люди, инструмент, мелочь, дни и планы станут как в этой копии. Текущее состояние перед этим тоже сохранится в автокопии.',snap_restore:'Вернуть',snap_done:'Данные возвращены',
+ snap_cnt:(w,t,d,p)=>`Людей ${w} · инстр. ${t} · дней ${d}`+(p?` · планов ${p}`:''),
+ upd_ready:'Вышло обновление приложения',upd_reload:'Обновить',
+ wn_title:'Что нового',wn_ok:'Понятно',
+ wn_1:'<b>План объекта (β)</b> — новая вкладка «План»: рисуете комнату пальцем, линии выравниваются, отмечаете зоны и этапы, закрашиваете сделанное за день — площадь считается сама и уходит в отчёт.',
+ wn_2:'<b>В чьей группе</b> — у человека не из вашей группы можно указать бригадира. В списке они разложены по группам.',
+ wn_3:'<b>Моё имя</b> в настройках — при обмене людьми получатель видит, из чьей они группы.',
+ wn_4:'<b>Автокопии</b> — приложение каждый день само сохраняет копию данных в телефоне. Можно вернуться на любой из 7 дней.',
+ wn_5:'Когда выходит обновление — появится кнопка «Обновить».',
+ beta:'Тестовые функции',beta_plan:'План объекта (β)',beta_plan_sub:'Чертёж, зоны и этапы работ — в разработке',tab_plan:'План',
  _end:''
 };
 L.ar={
@@ -733,9 +761,27 @@ L.ar={
  ext_title:'تقرير شخص آخر',ext_sub:'عندما تكون في إجازة — تدخل كمياته في الإجماليات',ext_author:'تقرير من',ext_ph:'الصق نص التقرير من واتساب (يمكن لعدة أيام)',ext_people:'العمال',ext_save:n=>`حفظ (${n})`,ext_saved:n=>`حُفظت التقارير: ${n}`,ext_by:n=>'تقرير: '+n,s_ext:n=>`بما في ذلك تقارير الآخرين: ${n}`,arch_day:'اليوم',
  share_people:'مشاركة العمال',sel_n:n=>`المحدَّد: ${n}`,sel_all:'الكل',share_file:'كملف',share_text:'كقائمة',people_file_title:'عمال من التطبيق',imp_people_done:n=>`أُضيف/حُدّث عمال: ${n}`,restore_or_people_sub:'ملف نسخة أو ملف عمال',
  trans:'الترجمة إلى العربية',trans_sub:'الأعمال والأقسام والمهن والمعدات',trans_hint:'الحقل الفارغ يستخدم الترجمة المدمجة (بالرمادي) إن وُجدت. زر G يفتح مترجم Google (يحتاج إنترنت).',trans_missing:'بلا ترجمة',kind_w:'عمل',kind_u:'وحدة',kind_s:'قسم',kind_p:'مهنة',kind_t:'معدة',kind_r:'منصب',kind_n:'أمر عمل',name_ar:'بالعربية',
+ f_owner:'في مجموعة من',ph_owner:'مثلًا: إيفانوفا',hint_owner:'اكتب اسم رئيس الفرقة أو المشرف الذي يعمل معه هذا العامل الآن.',grp_of:n=>'المجموعة: '+n,grp_none:'المجموعة غير محددة',
+ hint_group2:'اختر «لا» إذا كان العامل في مجموعة أخرى، واكتب أدناه في مجموعة من. يبقى في القاعدة ويظهر باللون الرمادي.',
+ my_name:'اسمي',my_name_ph:'مثلًا: بريل إ.',my_name_hint:'لتبادل العمال: سيرى المستلم من أي مجموعة هم.',
+ imp_from_q:(n,c)=>`عمال من مجموعة «${n}» · ${c}`,imp_from_t:'أين نسجلهم؟',imp_to_mine:'في مجموعتي',imp_keep:n=>`إبقاؤهم في مجموعة «${n}»`,
+ snaps:'نسخ تلقائية في الهاتف',snaps_sub:n=>n?`متوفرة لـ ${n} أيام · بدون صور`:'ستظهر أول نسخة اليوم',
+ snaps_intro:'كل يوم يحفظ التطبيق نسخة من البيانات داخل الهاتف (آخر 7 أيام). إذا حُذف شيء بالخطأ يمكنك الرجوع. الصور لا تدخل في النسخة وتبقى الصور الحالية.',
+ snaps_none:'لا توجد نسخ تلقائية بعد',snap_pre:'قبل الاسترجاع',snap_now:'احفظ نسخة تلقائية الآن',snap_saved:'تم حفظ النسخة',
+ snap_restore_q:d=>`استرجاع البيانات إلى ${d}؟`,snap_restore_t:'سيصبح العمال والمعدات والأيام والمخططات كما في هذه النسخة. تُحفظ الحالة الحالية قبل ذلك في نسخة تلقائية.',snap_restore:'استرجاع',snap_done:'تم استرجاع البيانات',
+ snap_cnt:(w,t,d,p)=>`عمال ${w} · معدات ${t} · أيام ${d}`+(p?` · مخططات ${p}`:''),
+ upd_ready:'يتوفر تحديث للتطبيق',upd_reload:'تحديث',
+ wn_title:'ما الجديد',wn_ok:'حسنًا',
+ wn_1:'<b>مخطط الموقع (تجريبي)</b> — تبويب «المخطط»: ارسم الغرفة بإصبعك فتستقيم الخطوط، حدد المناطق والمراحل ولوّن ما أُنجز اليوم — تُحسب المساحة وتذهب إلى التقرير.',
+ wn_2:'<b>في مجموعة من</b> — للعامل من خارج مجموعتك يمكن تحديد رئيس فرقته. القائمة مقسمة حسب المجموعات.',
+ wn_3:'<b>اسمي</b> في الإعدادات — عند تبادل العمال يرى المستلم من أي مجموعة هم.',
+ wn_4:'<b>نسخ تلقائية</b> — يحفظ التطبيق كل يوم نسخة من البيانات في الهاتف. يمكن الرجوع إلى أي يوم من آخر 7 أيام.',
+ wn_5:'عند صدور تحديث يظهر زر «تحديث».',
+ beta:'ميزات تجريبية',beta_plan:'مخطط الموقع (تجريبي)',beta_plan_sub:'مخطط وغرف ومراحل العمل — قيد التطوير',tab_plan:'المخطط',
  _end:''
 };
 
+if(window.PL&&PL.init)try{PL.init()}catch(e){console.warn('plan init',e)}
 /* ================= settings & db ================= */
 const DEF_REM=[['07:00','nariad'],['07:30','nariad'],['08:30','nariad'],['09:00','nariad'],['13:30','nariad2'],['13:50','nariad2'],['16:10','fact'],['16:20','fact'],['17:05','report'],['17:10','report']].map(([time,kind],i)=>({id:'r'+i,time,kind}));
 let S={lang:'ru',reportLang:'ru',workdays:[6,0,1,2,3,4],reminders:clone(DEF_REM),brigades:[],places:[],sections:[],times:{start:'08:30',lunchFrom:'13:00',lunchTo:'14:00',end:''},lastOrigin:'',lastBrigade:''};
@@ -744,12 +790,12 @@ const tr=(lang,k,...a)=>{const v=(L[lang]&&L[lang][k]!==undefined)?L[lang][k]:L.
 const loc=()=>S.lang==='ar'?'ar-EG-u-nu-latn':'ru-RU';
 
 let db;
-const data={workers:[],tools:[],small:[],trash:[],days:[],types:[]};
+const data={workers:[],tools:[],small:[],trash:[],days:[],types:[],plans:[]};
 let meta={dirty:0,lastExport:0};
-const STORES=['workers','tools','small','trash','meta','days','types','settings'];
+const STORES=['workers','tools','small','trash','meta','days','types','settings','plans','snaps'];
 const KEYP={meta:'k',settings:'k'};
 function openDB(){return new Promise((res,rej)=>{
-  const r=indexedDB.open('uchet',2);
+  const r=indexedDB.open('uchet',3);
   r.onupgradeneeded=()=>{const d=r.result;STORES.forEach(n=>{if(!d.objectStoreNames.contains(n))d.createObjectStore(n,{keyPath:KEYP[n]||'id'})})};
   r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error);
 })}
@@ -764,7 +810,7 @@ function bulkPut(s,items){return new Promise((res,rej)=>{if(!items||!items.lengt
 async function loadAll(){
   (await getAll('settings')).forEach(r=>{S[r.k]=r.v});
   S.times=Object.assign({start:'08:30',lunchFrom:'13:00',lunchTo:'14:00',end:''},S.times||{});
-  for(const k of ['workers','tools','small','trash','days','types'])data[k]=await getAll(k);
+  for(const k of ['workers','tools','small','trash','days','types','plans'])data[k]=await getAll(k);
   data.days.forEach(migrateDay);
   ['naryads','officials'].forEach(k=>{if(!Array.isArray(S[k]))S[k]=[]});if(!S.ar||typeof S.ar!=='object')S.ar={};
   (await getAll('meta')).forEach(r=>meta[r.k]=r.v);
@@ -882,16 +928,19 @@ $('#lb').onclick=()=>$('#lb').classList.remove('open');
 $('#lb button').innerHTML=ic('x',22);
 
 /* ================= state & rendering ================= */
-const state={tab:'today',q:{workers:'',tools:'',small:''},f:{workers:{g:'all',o:'all',b:'all',electro:false,height:false,tb:false,onsite:false},tools:{l:'all',s:'all'}}};
+const state={tab:'today',q:{workers:'',tools:'',small:''},f:{workers:{g:'all',o:'all',b:'all',ow:'all',electro:false,height:false,tb:false,onsite:false},tools:{l:'all',s:'all'}}};
 const chip=(label,on,attrs)=>`<button class="chip ${on?'on':''}" ${attrs}>${label}</button>`;
 const TABS=[['today','today','tab_today'],['workers','users','tab_people'],['tools','tool','tab_tools'],['small','box','tab_small']];
-const TITLES={workers:'tab_people',tools:'tab_tools',small:'tab_small'};
+const TITLES={workers:'tab_people',tools:'tab_tools',small:'tab_small',plan:'tab_plan'};
+const planOn=()=>!!(window.PL&&S.betaPlan!==false);
+const tabsList=()=>planOn()?[TABS[0],['plan','plan','tab_plan'],...TABS.slice(1)]:TABS;
 function greet(){const h=new Date().getHours();return t(h>=4&&h<11?'greet_m':h>=11&&h<17?'greet_d':h>=17&&h<23?'greet_e':'greet_n')}
 const brName=id=>{const b=S.brigades.find(x=>x.id===id);return b?b.name:''};
 
 function applyLang(){
   document.documentElement.lang=S.lang;document.documentElement.dir=S.lang==='ar'?'rtl':'ltr';
-  $('#tabs').innerHTML=TABS.map(([k,i,l])=>`<button data-tab="${k}"><span class="ti">${ic(i,22)}</span>${t(l)}</button>`).join('');
+  if(state.tab==='plan'&&!planOn())state.tab='today';
+  $('#tabs').innerHTML=tabsList().map(([k,i,l])=>`<button data-tab="${k}"><span class="ti">${ic(i,22)}</span>${t(l)}${k==='plan'?'<i class="betab">β</i>':''}</button>`).join('');
   $$('#tabs button').forEach(b=>b.onclick=()=>switchTab(b.dataset.tab));
   $('#gear').innerHTML=ic('sliders',22);$('#selb').innerHTML=ic('share',21);$('#selb').setAttribute('aria-label',t('share_people'));$('#sico').innerHTML=ic('search',19);$('#fab').innerHTML=ic('plus',30);
 }
@@ -904,7 +953,7 @@ function render(){
   const tab=state.tab;
   $('#title').textContent=tab==='today'?greet():t(TITLES[tab]);
   $$('#tabs button').forEach(b=>b.classList.toggle('on',b.dataset.tab===tab));
-  $('#sw').hidden=tab==='today';$('#fab').hidden=tab==='today';
+  $('#sw').hidden=tab==='today'||tab==='plan';$('#fab').hidden=tab==='today';
   $('#q').value=state.q[tab]||'';
   $('#q').placeholder={workers:t('ph_workers'),tools:t('ph_tools'),small:t('ph_small')}[tab]||'';
   $('#wl').innerHTML=data.workers.map(w=>`<option value="${esc(w.name)}">`).join('');
@@ -918,7 +967,7 @@ function renderChips(){
     const f=state.f.workers,n=data.workers.length,m=data.workers.filter(w=>w.inGroup).length;
     const brs=S.brigades.filter(b=>data.workers.some(w=>w.brigade===b.id));
     c.innerHTML=`<div class="crow">${chip(`${t('all')} ${n}`,f.g==='all','data-f="g" data-v="all"')}${chip(`${t('my_group')} ${m}`,f.g==='in','data-f="g" data-v="in"')}${chip(`${t('not_group')} ${n-m}`,f.g==='out','data-f="g" data-v="out"')}</div>
-    <div class="crow">${chip(t('o_sng'),f.o==='sng','data-f="o" data-v="sng" data-tg="1"')}${chip(t('o_are'),f.o==='are','data-f="o" data-v="are" data-tg="1"')}${brs.map(b=>chip(esc(t('br',b.name)),f.b===b.id,`data-f="b" data-v="${b.id}" data-tg="1"`)).join('')}${chip(ic('bolt',15)+t('p_electro'),f.electro,'data-t="electro"')}${chip(ic('card',15)+t('p_tb'),f.tb,'data-t="tb"')}${chip(ic('up',15)+t('p_height'),f.height,'data-t="height"')}${chip(ic('check',15)+t('onsite'),f.onsite,'data-t="onsite"')}</div>`;
+    <div class="crow">${chip(t('o_sng'),f.o==='sng','data-f="o" data-v="sng" data-tg="1"')}${chip(t('o_are'),f.o==='are','data-f="o" data-v="are" data-tg="1"')}${brs.map(b=>chip(esc(t('br',b.name)),f.b===b.id,`data-f="b" data-v="${b.id}" data-tg="1"`)).join('')}${chip(ic('bolt',15)+t('p_electro'),f.electro,'data-t="electro"')}${chip(ic('card',15)+t('p_tb'),f.tb,'data-t="tb"')}${chip(ic('up',15)+t('p_height'),f.height,'data-t="height"')}${chip(ic('check',15)+t('onsite'),f.onsite,'data-t="onsite"')}</div>${f.g==='out'&&owners().length?`<div class="crow">${owners().map(o=>chip(esc(o),f.ow===keyOf(o),`data-f="ow" data-v="${esc(keyOf(o))}" data-tg="1"`)).join('')}</div>`:''}`;
   }else if(tab==='tools'){
     const f=state.f.tools,T=data.tools,cnt=l=>T.filter(x=>x.loc===l).length;
     c.innerHTML=`<div class="crow">${chip(`${t('all')} ${T.length}`,f.l==='all','data-f="l" data-v="all"')}${chip(`${t('on_me')} ${cnt('me')}`,f.l==='me','data-f="l" data-v="me"')}${chip(`${t('at_others')} ${cnt('other')}`,f.l==='other','data-f="l" data-v="other"')}${chip(`${t('warehouse')} ${cnt('wh')}`,f.l==='wh','data-f="l" data-v="wh"')}</div>
@@ -938,7 +987,7 @@ function wCard(w){
   const pm=(key,icn,k)=>`<span class="pm ${p[key]?'y':'n'}" title="${t(k)}" aria-label="${t(k)}: ${p[key]?t('yes'):t('no')}">${ic(icn,17)}</span>`;
   const org=w.origin==='sng'||w.origin==='are'?`<span class="pc org">${t('o_'+w.origin)}</span>`:'';
   const br=w.brigade&&brName(w.brigade)?esc(t('br',brName(w.brigade))):'';
-  const sub=[esc(tx(w.profession||'')),br].filter(Boolean).join(' · ')||'—';
+  const sub=[!w.inGroup&&w.owner?`<b class="own">${esc(t('grp_of',w.owner))}</b>`:'',esc(tx(w.profession||'')),br].filter(Boolean).join(' · ')||'—';
   const lu=LONG.includes(st)&&longStatus(w)===st&&w.statusUntil?' · '+t('until',fmtShort(w.statusUntil)):'';
   const right=w.inGroup?`<button class="pc st-${st}" data-act="status">${st==='pending'?ic('clock',13):''}${t('st_'+st)}${lu}</button>`:`<button class="mini2" data-act="join">${ic('plus',16)} ${t('join')}</button>`;
   const sel=state.sel?`<span class="pkc ${state.sel.has(w.id)?'on':''}">${state.sel.has(w.id)?ic('check',16):''}</span>`:'';
@@ -956,6 +1005,7 @@ function sCard(s){
 function renderList(){
   const Lst=$('#list'),tab=state.tab,q=norm(state.q[tab]);let h='';
   if(tab==='today'){Lst.innerHTML=todayHTML();ringDiff();return}
+  if(tab==='plan'){try{Lst.innerHTML=PL.listHTML()}catch(e){Lst.innerHTML=emptyHTML('alert',esc(e.message))}return}
   if(tab==='workers'){
     const f=state.f.workers;
     const arr=data.workers.filter(w=>{
@@ -963,13 +1013,17 @@ function renderList(){
       if(f.o!=='all'&&w.origin!==f.o)return false;if(f.b!=='all'&&w.brigade!==f.b)return false;
       const p=w.permits||{};if(f.electro&&!p.electro)return false;if(f.height&&!p.height)return false;if(f.tb&&!p.tb)return false;
       if(f.onsite&&effStatus(w)!=='work')return false;
-      return !q||norm([w.name,w.nameAr,w.idNumber,w.profession,w.experience,w.note,brName(w.brigade),w.certHeight,w.certElectro,w.certOT,w.tabNo].join(' ')).includes(q);
+      if(f.ow&&f.ow!=='all'&&keyOf(w.owner)!==f.ow)return false;
+      return !q||norm([w.name,w.nameAr,w.idNumber,w.profession,w.experience,w.note,brName(w.brigade),w.certHeight,w.certElectro,w.certOT,w.tabNo,w.owner].join(' ')).includes(q);
     });
     const ord=(a,b)=>((effStatus(a)==='work'?0:1)-(effStatus(b)==='work'?0:1))||byName(a,b);
     const mine=arr.filter(w=>w.inGroup),oth=arr.filter(w=>!w.inGroup).sort(byName);
     if(mine.length){h+=sec(t('sec_mine'),mine.length);
       [0,1,2,3].forEach(r=>{const g=mine.filter(w=>permRank(w)===r).sort(ord);if(g.length)h+=sec2(t(RANK_L[r])+' · '+g.length)+g.map(wCard).join('')})}
-    if(oth.length)h+=sec(t('sec_other'),oth.length)+oth.map(wCard).join('');
+    if(oth.length){h+=sec(t('sec_other'),oth.length);
+      const gm=new Map();oth.forEach(w=>{const k=keyOf(w.owner);if(!gm.has(k))gm.set(k,{n:String(w.owner||'').trim(),a:[]});gm.get(k).a.push(w)});
+      const gs=[...gm.values()].sort((a,b)=>(!a.n)-(!b.n)||a.n.localeCompare(b.n,'ru'));
+      gs.forEach(g=>{if(gs.length>1||g.n)h+=sec2((g.n?t('grp_of',esc(g.n)):t('grp_none'))+' · '+g.a.length);h+=g.a.map(wCard).join('')})}
     if(!h)h=data.workers.length?emptyHTML('search',t('empty_found')):emptyHTML('users',t('empty_workers'));
   }else if(tab==='tools'){
     const f=state.f.tools,ord={me:0,other:1,wh:2};
@@ -1007,12 +1061,13 @@ $('#chips').addEventListener('click',e=>{
   else f[b.dataset.f]=b.dataset.v;
   renderChips();renderList();
 });
-$('#fab').onclick=()=>({workers:()=>workerSheet(),tools:()=>toolSheet(),small:()=>smallSheet()})[state.tab]();
+$('#fab').onclick=()=>({workers:()=>workerSheet(),tools:()=>toolSheet(),small:()=>smallSheet(),plan:()=>PL.newSheet()})[state.tab]();
 $('#gear').onclick=moreSheet;
 $('#selb').onclick=()=>{state.sel=state.sel?null:new Set();render()};
 $('#banner').addEventListener('click',e=>{const b=e.target.closest('[data-go]');if(!b)return;b.dataset.go==='backup'?exportBackup():moreSheet()});
 $('#list').addEventListener('click',async e=>{
   if(state.tab==='today')return todayClick(e);
+  if(state.tab==='plan')return PL.listClick(e);
   const el=e.target.closest('[data-act]');if(!el)return;
   const host=el.closest('[data-id]');if(!host)return;
   const id=host.dataset.id,act=el.dataset.act;
@@ -1022,7 +1077,7 @@ $('#list').addEventListener('click',async e=>{
     if(act==='photo'){if(w.photo)lightbox(w.photo);else workerSheet(w)}
     if(act==='open')workerSheet(w);
     if(act==='status')statusSheet(w);
-    if(act==='join'){w.inGroup=true;await saveItem('workers',w);toast(t('joined',w.name))}
+    if(act==='join'){w.inGroup=true;w.owner='';await saveItem('workers',w);toast(t('joined',w.name))}
   }else if(state.tab==='tools'){
     const x=data.tools.find(y=>y.id===id);if(!x)return;
     if(act==='photo'){if(x.photo)lightbox(x.photo);else toolSheet(x)}
@@ -1074,13 +1129,16 @@ async function newBrigade(){
   const ex=S.brigades.find(b=>keyOf(b.name)===keyOf(r.text));if(ex)return ex.id;
   const b={id:uid(),name:r.text};await setSetting('brigades',[...S.brigades,b]);return b.id;
 }
+const owners=()=>[...new Map(data.workers.filter(w=>!w.inGroup&&String(w.owner||'').trim()).map(w=>[keyOf(w.owner),w.owner.trim()])).values()].sort((a,b)=>a.localeCompare(b,'ru'));
+function ownerChips(cur){return owners().map(o=>`<button type="button" class="chip ${keyOf(o)===keyOf(cur)?'on':''}" data-own="${esc(o)}">${esc(o)}</button>`).join('')}
 function workerSheet(w0){
   const isNew=!w0;
   const s=w0?clone(w0):{id:uid(),inGroup:true,photo:null,thumb:null,name:'',nameAr:'',origin:S.lastOrigin||'',brigade:S.lastBrigade||'',idNumber:'',profession:'',permits:{electro:false,height:false,tb:false},experience:'',ppe:[],note:'',status:'work',statusUntil:'',created:Date.now()};
   s.permits=s.permits||{};s.ppe=s.ppe||[];s.status=s.status||'work';s.origin=s.origin||'';s.brigade=s.brigade||'';
   const body=`
     ${ynRow('users',t('f_in_group'),'inGroup',s.inGroup,t('yes2'),t('no'))}
-    <div class="hint" style="margin-bottom:16px">${t('hint_group')}</div>
+    <div class="hint" style="margin-bottom:12px">${t('hint_group2')}</div>
+    <div id="ownb" class="certb" style="margin-bottom:16px" ${s.inGroup?'hidden':''}>${fld(t('f_owner'),`<input data-k="owner" class="bidi" value="${esc(s.owner||'')}" placeholder="${esc(t('ph_owner'))}" autocomplete="off" autocapitalize="words"><div class="crow wrap" id="owns" style="margin-top:8px">${ownerChips(s.owner)}</div>`,t('hint_owner'))}</div>
     ${isNew?'':`<div class="infob"><span class="pc gr">${ic('cal',14)} ${t('month_days',daysThisMonth(s.id))}</span>${toolsOf(s.name).map(x=>`<button type="button" class="pc me" data-tool="${x.id}">${ic('tool',14)} ${esc(x.name)}</button>`).join('')}</div>`}
     ${photoHTML(s.photo)}
     ${fld(t('f_name'),`<input data-k="name" class="bidi" value="${esc(s.name)}" autocomplete="off" autocapitalize="words">`)}
@@ -1110,12 +1168,14 @@ function workerSheet(w0){
     collect(w,s);
     if(!s.name){toast(t('enter_name'));throw new Error('v')}
     if(s.certHeight)s.permits.height=true;if(s.certElectro)s.permits.electro=true;
+    if(s.inGroup)s.owner='';
     await saveItem('workers',s);
     if(isNew){await setSetting('lastOrigin',s.origin,true);await setSetting('lastBrigade',s.brigade,true)}
-    toast(isNew?t('added_group'):t('saved'));
+    toast(isNew&&s.inGroup?t('added_group'):t('saved'));
   }});
   bindPhoto(w,s);
-  bindForm(w,s);
+  bindForm(w,s,(k,v)=>{if(k==='inGroup'){$('#ownb',w).hidden=v==='1';if(v!=='1')setTimeout(()=>{const o=$('#ownb',w);if(o)o.scrollIntoView({block:'nearest',behavior:'smooth'})},60)}});
+  $('#owns',w).onclick=e=>{const b=e.target.closest('[data-own]');if(!b)return;const i=$('[data-k="owner"]',w);i.value=b.dataset.own;$('#owns',w).innerHTML=ownerChips(i.value)};
   w.addEventListener('click',e=>{const b=e.target.closest('[data-tool]');if(b)toolSheet(data.tools.find(x=>x.id===b.dataset.tool))});
   $('#brs',w).onclick=async e=>{
     const b=e.target.closest('[data-br]');
@@ -2280,18 +2340,24 @@ async function selBarClick(e){
   if(e.target.closest('[data-st]')){copyText(ws.map((w,i)=>{const c=[w.certHeight?t('cert_h_s')+' №'+w.certHeight:'',w.certElectro?t('cert_e_s')+' №'+w.certElectro:'',w.certOT?t('cert_ot_s')+' №'+w.certOT:'',w.tabNo?t('tab_s')+' №'+w.tabNo:''].filter(Boolean).join(', ');return `${i+1}. ${w.name}${w.nameAr?' / '+w.nameAr:''} — ${[w.origin?t('o_'+w.origin):'',w.brigade&&brName(w.brigade)?t('br',brName(w.brigade)):'',tx(w.profession||'')].filter(Boolean).join(' · ')}${c?' — '+c:''}`}).join('\n'));return}
   if(e.target.closest('[data-sf]')){
     const brs=S.brigades.filter(b=>ws.some(w=>w.brigade===b.id));
-    const payload={app:'uchet',type:'people',version:1,exported:new Date().toISOString(),workers:ws.map(w=>Object.assign(clone(w),{inGroup:true})),brigades:brs};
+    const me=String(S.myName||'').trim();
+    const payload={app:'uchet',type:'people',version:2,from:me,exported:new Date().toISOString(),workers:ws.map(w=>Object.assign(clone(w),{inGroup:true,owner:w.inGroup?me:(w.owner||'')})),brigades:brs};
     const ok=await shareFile(new Blob([JSON.stringify(payload)],{type:'application/json'}),`uchet-people-${iso()}.json`,'application/json',t('people_file_title'));
     if(ok){state.sel=null;render()}
   }
 }
 async function importPeople(j){
+  const from=String(j.from||'').trim();let keep=false;
+  if(from&&keyOf(from)!==keyOf(S.myName||'')){
+    const a=await ask({title:t('imp_from_q',from,(j.workers||[]).length),text:esc(t('imp_from_t')),buttons:[{l:t('imp_to_mine'),v:'mine',c:'pri'},{l:t('imp_keep',from),v:'keep'},{l:t('cancel'),v:false}]});
+    if(!a.v)return;keep=a.v==='keep';
+  }
   const map={};const br=[...S.brigades];
   (j.brigades||[]).forEach(b=>{const ex=br.find(x=>keyOf(x.name)===keyOf(b.name));if(ex)map[b.id]=ex.id;else{const nb={id:uid(),name:b.name};br.push(nb);map[b.id]=nb.id}});
   await setSetting('brigades',br,true);
   let n=0;
   for(const w0 of (j.workers||[])){
-    const w=clone(w0);w.brigade=map[w.brigade]||'';w.inGroup=true;
+    const w=clone(w0);w.brigade=map[w.brigade]||'';w.inGroup=!keep;w.owner=keep?(w.owner||from):'';
     const ex=data.workers.find(x=>x.id===w.id)||data.workers.find(x=>keyOf(x.name)===keyOf(w.name));
     if(ex){w.id=ex.id;if(!w.photo&&ex.photo){w.photo=ex.photo;w.thumb=ex.thumb}}
     await saveItem('workers',w,true);n++;
@@ -2317,8 +2383,8 @@ function transSheet(){
 }
 
 /* ================= backup ================= */
-const SKEYS=['lang','reportLang','workdays','reminders','brigades','places','sections','times','lastOrigin','lastBrigade','naryads','officials','ar'];
-function backupPayload(){const st={};SKEYS.forEach(k=>st[k]=S[k]);return {app:'uchet',version:3,exported:new Date().toISOString(),workers:data.workers,tools:data.tools,small:data.small,trash:data.trash,days:data.days.filter(d=>d.updated||d.sites.length||d.tasks.length),types:data.types,settings:st}}
+const SKEYS=['lang','reportLang','workdays','reminders','brigades','places','sections','times','lastOrigin','lastBrigade','naryads','officials','ar','myName','betaPlan'];
+function backupPayload(){const st={};SKEYS.forEach(k=>st[k]=S[k]);return {app:'uchet',version:3,exported:new Date().toISOString(),workers:data.workers,tools:data.tools,small:data.small,trash:data.trash,days:data.days.filter(d=>d.updated||d.sites.length||d.tasks.length),types:data.types,plans:data.plans,settings:st}}
 async function markExported(){meta.dirty=0;meta.lastExport=Date.now();await put('meta',{k:'dirty',v:0});await put('meta',{k:'lastExport',v:meta.lastExport});renderBanner();renderGear()}
 async function shareFile(blob,name,type,title){
   const file=new File([blob],name,{type});
@@ -2339,22 +2405,79 @@ async function importBackup(file){
   let j;
   try{j=JSON.parse(await file.text());if(j.app!=='uchet')throw new Error('x')}catch(e){alert(t('bad_file'));return}
   if(j.type==='people')return importPeople(j);
-  const Wk=j.workers||[],T=j.tools||[],Sm=j.small||[],R=j.trash||[],D=j.days||[],Ty=j.types||[];
-  const empty=!data.workers.length&&!data.tools.length&&!data.small.length&&!data.days.some(d=>d.updated);
+  const Wk=j.workers||[],T=j.tools||[],Sm=j.small||[],D=j.days||[];
+  const empty=!data.workers.length&&!data.tools.length&&!data.small.length&&!data.days.some(d=>d.updated)&&!data.plans.length;
   let mode='replace';
   if(!empty){
     const a=await ask({title:t('restore_title'),text:t('in_file',Wk.length,T.length,Sm.length,D.length)+'<br>'+t('what_to_do'),buttons:[{l:t('merge'),v:'merge',c:'pri'},{l:t('replace_all'),v:'replace',c:'danger'},{l:t('cancel'),v:false}]});
     if(!a.v)return;mode=a.v;
+    if(mode==='replace')await snapNow('pre').catch(()=>{});
   }
+  return applyBackup(j,mode);
+}
+async function applyBackup(j,mode){
+  const Wk=j.workers||[],T=j.tools||[],Sm=j.small||[],R=j.trash||[],D=j.days||[],Ty=j.types||[],Pl=Array.isArray(j.plans)?j.plans:null;
   try{
-    if(mode==='replace'){for(const k of ['workers','tools','small','trash','days','types'])await clearS(k)}
-    await bulkPut('workers',Wk);await bulkPut('tools',T);await bulkPut('small',Sm);await bulkPut('trash',R);await bulkPut('days',D);await bulkPut('types',Ty);
+    if(mode==='replace'){for(const k of ['workers','tools','small','trash','days','types'])await clearS(k);if(Pl)await clearS('plans')}
+    await bulkPut('workers',Wk);await bulkPut('tools',T);await bulkPut('small',Sm);await bulkPut('trash',R);await bulkPut('days',D);await bulkPut('types',Ty);if(Pl)await bulkPut('plans',Pl);
     if(j.settings){for(const k of SKEYS)if(j.settings[k]!==undefined&&(mode==='replace'||['brigades','places','sections','naryads','officials'].includes(k)&&!(S[k]||[]).length))await setSetting(k,j.settings[k],true)}
     await loadAll();
     if(mode==='replace'){meta.dirty=0;await put('meta',{k:'dirty',v:0})}else await touch();
     $$('.host').forEach(s=>s.close&&s.close());
     applyLang();render();toast(t('restored'));
   }catch(e){alert(t('restore_err')+e.message)}
+}
+
+/* ================= v8: daily auto-snapshots inside the phone ================= */
+const SNAP_KEEP=7;
+function snapPayload(){
+  const p=clone(backupPayload());
+  const strip=o=>{if(o&&o.photo&&!String(o.photo).startsWith('gallery/')){o.photo=null;o.thumb=null}};
+  p.workers.forEach(strip);p.tools.forEach(strip);(p.trash||[]).forEach(x=>strip(x.item));
+  return p;
+}
+async function snapNow(kind){
+  const p=snapPayload(),id=kind==='pre'?'pre-'+Date.now():iso();
+  await put('snaps',{id,at:Date.now(),kind:kind||'day',p,n:[p.workers.length,p.tools.length,p.days.length,(p.plans||[]).length]});
+  const all=(await getAll('snaps')).sort((a,b)=>b.at-a.at);
+  const days=all.filter(x=>!String(x.id).startsWith('pre-')),pre=all.filter(x=>String(x.id).startsWith('pre-'));
+  for(const x of [...days.slice(SNAP_KEEP),...pre.slice(3)])await del('snaps',x.id);
+}
+async function autoSnap(){
+  try{
+    if(meta.lastSnap===iso())return;
+    if(!data.workers.length&&!data.tools.length&&!data.small.length&&!data.days.some(d=>d.updated)&&!data.plans.length)return;
+    await snapNow('day');meta.lastSnap=iso();await put('meta',{k:'lastSnap',v:meta.lastSnap});
+  }catch(e){console.warn('snap',e)}
+}
+async function snapsSheet(){
+  const draw=async()=>{const all=(await getAll('snaps')).sort((a,b)=>b.at-a.at);
+    return `<div class="note">${t('snaps_intro')}</div>`+(all.map(x=>`<button class="menu" data-snap="${esc(x.id)}"><div>${esc(new Date(x.at).toLocaleString(loc(),{weekday:'short',day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}))}${x.kind==='pre'?` · ${t('snap_pre')}`:''}<small>${esc(t('snap_cnt',...(x.n||[0,0,0,0])))}</small></div>${ic('undo',20)}</button>`).join('')||emptyHTML('save',t('snaps_none')))+`<button class="btn wide" style="margin-top:10px" data-snapnow>${ic('save',18)} ${t('snap_now')}</button>`};
+  const w=sheet({title:t('snaps'),left:t('close'),tapOut:true,body:`<div id="snl">${await draw()}</div>`});
+  $('#snl',w).onclick=async e=>{
+    if(e.target.closest('[data-snapnow]')){await snapNow('day');meta.lastSnap=iso();await put('meta',{k:'lastSnap',v:meta.lastSnap});$('#snl',w).innerHTML=await draw();toast(t('snap_saved'));return}
+    const b=e.target.closest('[data-snap]');if(!b)return;
+    const x=(await getAll('snaps')).find(y=>String(y.id)===b.dataset.snap);if(!x)return;
+    const when=new Date(x.at).toLocaleString(loc(),{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+    if(!(await ask({title:t('snap_restore_q',when),text:esc(t('snap_restore_t')),buttons:[{l:t('snap_restore'),v:true,c:'danger'},{l:t('cancel'),v:false}]})).v)return;
+    await snapNow('pre');
+    const j=clone(x.p);
+    const keepPh=(arr,cur)=>arr.forEach(o=>{if(!o.photo){const c=cur.find(y=>y.id===o.id);if(c&&c.photo){o.photo=c.photo;o.thumb=c.thumb}}});
+    keepPh(j.workers||[],data.workers);keepPh(j.tools||[],data.tools);
+    if(!Array.isArray(j.plans))j.plans=[];
+    await applyBackup(j,'replace');toast(t('snap_done'));
+  };
+}
+
+/* ================= v8: what's new & update prompt ================= */
+const APP_VER='8';
+function whatsNew(){
+  sheet({title:t('wn_title'),left:t('close'),tapOut:true,body:`<div class="wnew">${[1,2,3,4,5].map(i=>`<div class="wnewi"><span>${ic(['plan','users','edit','save','download'][i-1],20)}</span><p>${t('wn_'+i)}</p></div>`).join('')}</div><button class="btn pri wide" data-x2>${t('wn_ok')}</button>`}).addEventListener('click',e=>{if(e.target.closest('[data-x2]'))e.currentTarget.close()});
+}
+function updBar(){
+  if($('#updbar'))return;
+  const b=document.createElement('button');b.id='updbar';b.innerHTML=`${ic('download',18)}<span>${t('upd_ready')}</span><b>${t('upd_reload')}</b>`;
+  b.onclick=()=>location.reload();document.body.appendChild(b);
 }
 
 /* ================= reminders (calendar file) ================= */
@@ -2404,6 +2527,10 @@ function moreSheet(){
     <button class="menu" data-m="backup"><div>${t('save_copy')}<small data-lastbk>${esc(bkStatus())}</small></div>${ic('save',20)}</button>
     <label class="menu" style="display:flex"><div>${t('restore')}<small>${t('restore_or_people_sub')}</small></div>${ic('undo',20)}<input type="file" accept=".json,application/json" hidden data-restore></label>
     <button class="menu" data-m="sc"><div>${t('one_file')}<small>${t('one_file_sub')}</small></div>${ic('chev',18)}</button>
+    <button class="menu" data-m="snaps"><div>${t('snaps')}<small data-snapn>${t('snaps_sub',0)}</small></div>${ic('clock',20)}</button>
+    <div class="lab" style="margin-top:14px">${t('my_name')}</div>
+    <input data-myname class="bidi" value="${esc(S.myName||'')}" placeholder="${esc(t('my_name_ph'))}" autocomplete="off" autocapitalize="words">
+    <div class="hint" style="margin:6px 4px 4px">${t('my_name_hint')}</div>
     <div class="lab" style="margin-top:14px">${t('lang_app')}</div>
     ${seg('lang',[['ru','Русский'],['ar','العربية']],S.lang)}
     <div class="lab">${t('lang_report')}</div>
@@ -2429,18 +2556,23 @@ function moreSheet(){
     <button class="menu" data-m="archive"><div>${t('archive')}<small>${t('archive_sub')}</small></div>${ic('archive',20)}</button>
     <button class="menu" data-m="summary"><div>${t('summary')}<small>${t('summary_sub')}</small></div>${ic('list',20)}</button>
     <button class="menu" data-m="trash"><div>${t('trash')}<small>${t('trash_sub',data.trash.length)}</small></div>${ic('trash',20)}</button>
+    ${window.PL?`<div class="lab" style="margin-top:14px">${t('beta')}</div>
+    <div class="prow"><div class="pl">${ic('plan',20)}<span>${t('beta_plan')}<small style="display:block;font-size:12.5px;color:var(--sub);font-weight:600">${t('beta_plan_sub')}</small></span></div><div class="yn" data-beta data-v="${S.betaPlan===false?0:1}"><button type="button" data-v="1">${t('yes2')}</button><button type="button" data-v="0">${t('no')}</button></div></div>`:''}
+    <button class="menu" data-m="wn"><div>${t('wn_title')}<small>v${APP_VER}</small></div>${ic('spark',20)}</button>
     <div class="note" data-stor style="margin-top:14px">…</div>`;
   const w=sheet({title:t('more'),body,left:t('close'),tapOut:true,onClose:()=>render()});
   w.addEventListener('click',async e=>{
     const m=e.target.closest('[data-m]');
-    if(m){({rem:remSheet,backup:exportBackup,sc:shortcutSheet,summary:summarySheet,archive:archiveSheet,types:typesSheet,trash:trashSheet,stats:statsSheet,tabel:tabelSheet,import:importSheet,naryads:naryadsListSheet,offs:officialsSheet,ext:extReportSheet,trans:transSheet,brig:brigadesSheet,dict:dictSheet})[m.dataset.m]();return}
+    if(m){({snaps:snapsSheet,wn:whatsNew,rem:remSheet,backup:exportBackup,sc:shortcutSheet,summary:summarySheet,archive:archiveSheet,types:typesSheet,trash:trashSheet,stats:statsSheet,tabel:tabelSheet,import:importSheet,naryads:naryadsListSheet,offs:officialsSheet,ext:extReportSheet,trans:transSheet,brig:brigadesSheet,dict:dictSheet})[m.dataset.m]();return}
+    const be=e.target.closest('[data-beta] button');
+    if(be){const on=be.dataset.v==='1';be.parentElement.dataset.v=on?1:0;await setSetting('betaPlan',on);applyLang();return}
     const dd=e.target.closest('#wdays button');
     if(dd){const d=+dd.dataset.d,a=S.workdays.includes(d)?S.workdays.filter(x=>x!==d):[...S.workdays,d];dd.classList.toggle('on');await setSetting('workdays',a);return}
     const sg=e.target.closest('.seg button');
     if(sg){const k=sg.parentElement.dataset.seg;await setSetting(k,sg.dataset.v);
       if(k==='lang'){w.close();applyLang();render();setTimeout(moreSheet,420)}else{$$('button',sg.parentElement).forEach(x=>x.classList.toggle('on',x===sg))}}
   });
-  w.addEventListener('change',async e=>{const k=e.target.dataset.tm;if(!k)return;await setSetting('times',Object.assign({},S.times,{[k]:e.target.value}))});
+  w.addEventListener('change',async e=>{if(e.target.matches('[data-myname]'))return setSetting('myName',e.target.value.trim());const k=e.target.dataset.tm;if(!k)return;await setSetting('times',Object.assign({},S.times,{[k]:e.target.value}))});
   $('[data-restore]',w).onchange=e=>{const f=e.target.files[0];if(f)importBackup(f);e.target.value=''};
   (async()=>{
     let txt='';
@@ -2450,6 +2582,7 @@ function moreSheet(){
       if(navigator.storage&&navigator.storage.estimate){const e=await navigator.storage.estimate();txt+=t('stor_used',(e.usage/1048576).toFixed(1))}
     }catch(x){}
     const el=$('[data-stor]',w);if(el)el.textContent=txt||t('stor_local');
+    try{const n=(await getAll('snaps')).filter(x=>x.kind!=='pre').length;const sn=$('[data-snapn]',w);if(sn)sn.textContent=t('snaps_sub',n)}catch(x){}
   })();
 }
 
@@ -2470,12 +2603,18 @@ function tick(){
   const nx=naryadsActive(iso()).filter(n=>daysBetween(iso(),n.to)<=1);if(nx.length)setTimeout(()=>toast(t('nar_end_soon',nx[0].num||'—',daysBetween(iso(),nx[0].to)<=0?t('nar_cal_today'):t('nar_cal_tomorrow'))),1200);
   if(!meta.onboarded&&!data.workers.length&&!data.types.length)setTimeout(onboarding,600);
   if(navigator.storage&&navigator.storage.persist)navigator.storage.persist().catch(()=>{});
-  if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+  if('serviceWorker' in navigator){
+    let hadCtrl=!!navigator.serviceWorker.controller;
+    navigator.serviceWorker.addEventListener('controllerchange',()=>{if(!hadCtrl){hadCtrl=true;return}updBar()});
+    navigator.serviceWorker.register('sw.js').then(r=>{setInterval(()=>r.update().catch(()=>{}),30*60e3)}).catch(()=>{});
+  }
+  setTimeout(autoSnap,2500);
+  if(S.seenVer!==APP_VER){const old=data.workers.length||data.days.length;await setSetting('seenVer',APP_VER,true);if(old&&meta.onboarded)setTimeout(whatsNew,900)}
   setInterval(tick,30000);
   let lastDay=iso();
   document.addEventListener('visibilitychange',async()=>{if(document.hidden)return;
     if(pendingSend&&Date.now()-pendingSend<20*60e3){pendingSend=0;const d=getDay(iso());if(!d.sent){const r=await ask({title:t('sent_q'),buttons:[{l:t('sent_yes'),v:true,c:'pri'},{l:t('sent_no'),v:false}]});if(r.v)return markSent(d)}}
-    pendingSend=0;await syncToday();if(iso()!==lastDay){lastDay=iso();render();return}if(state.tab==='today'&&!$('.host')&&!(document.activeElement&&document.activeElement.matches('input,textarea')))renderList()});
+    pendingSend=0;autoSnap();await syncToday();if(iso()!==lastDay){lastDay=iso();render();return}if(state.tab==='today'&&!$('.host')&&!(document.activeElement&&document.activeElement.matches('input,textarea')))renderList()});
 })().catch(err=>{document.body.innerHTML='<p style="padding:24px">'+esc(err.message)+'</p>'});
 </script>
 </body>
