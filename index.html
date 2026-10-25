@@ -501,6 +501,7 @@ details.more{margin-bottom:10px}details.more summary{font-weight:750;color:var(-
 <datalist id="wl"></datalist><datalist id="tnl"></datalist>
 
 <script src="plan.js"></script>
+<script src="smena.js"></script>
 <script>
 'use strict';
 /* ================= helpers ================= */
@@ -676,6 +677,15 @@ L.ru={
  wn_4:'<b>Автокопии</b> — приложение каждый день само сохраняет копию данных в телефоне. Можно вернуться на любой из 7 дней.',
  wn_5:'Когда выходит обновление — появится кнопка «Обновить».',
  beta:'Тестовые функции',beta_plan:'План объекта (β)',beta_plan_sub:'Чертёж, зоны и этапы работ — в разработке',tab_plan:'План',
+ sz:'Размер копии',sz_sub:m=>`Сейчас примерно ${m} МБ · очистить старые фото`,
+ sz_intro:'Копия собирается заново из того, что сейчас есть в приложении. Старые фото попадают в неё только из корзины (удалённое хранится 30 дней) и из фото чертежей в «Плане».',
+ sz_total:'Вся копия',sz_w:'Фото людей',sz_t:'Фото инструмента',sz_tr:n=>`Корзина (${n})`,sz_trph:'из них фото',sz_pl:'Фото чертежей',sz_other:'Остальные данные',sz_mb:m=>m+' МБ',
+ sz_trash_ph:'Убрать фото из корзины',sz_trash_ph_sub:'Удалённое можно будет восстановить, но без фото',
+ sz_trash_all:'Очистить корзину полностью',sz_trash_all_sub:'Удалённое нельзя будет восстановить',sz_trash_all_q:n=>`Удалить навсегда ${n} шт. из корзины?`,
+ sz_shrink:'Уменьшить фото людей и инструмента',sz_shrink_sub:'До 800 пикселей — на телефоне выглядит так же, весит в 2–3 раза меньше',
+ sz_shrink_q:'Уменьшить все фото?',sz_shrink_t:'Фото станут легче. Обратно увеличить нельзя. Перед этим сохранится автокопия данных.',sz_shrink_btn:'Уменьшить',
+ sz_working:'Обрабатываю фото…',sz_done:(a,b)=>`Готово: было ${a} МБ, стало ${b} МБ`,sz_after:'Теперь сохраните новую копию — старый файл можно удалить.',sz_save_now:'Сохранить новую копию',
+ trash_clear:'Очистить корзину',
  _end:''
 };
 L.ar={
@@ -778,10 +788,20 @@ L.ar={
  wn_4:'<b>نسخ تلقائية</b> — يحفظ التطبيق كل يوم نسخة من البيانات في الهاتف. يمكن الرجوع إلى أي يوم من آخر 7 أيام.',
  wn_5:'عند صدور تحديث يظهر زر «تحديث».',
  beta:'ميزات تجريبية',beta_plan:'مخطط الموقع (تجريبي)',beta_plan_sub:'مخطط وغرف ومراحل العمل — قيد التطوير',tab_plan:'المخطط',
+ sz:'حجم النسخة',sz_sub:m=>`الآن تقريبًا ${m} ميغابايت · حذف الصور القديمة`,
+ sz_intro:'تُجمع النسخة من جديد مما هو موجود الآن في التطبيق. الصور القديمة تدخلها فقط من السلة (المحذوفات تُحفظ 30 يومًا) ومن صور المخططات في «المخطط».',
+ sz_total:'النسخة كاملة',sz_w:'صور العمال',sz_t:'صور المعدات',sz_tr:n=>`السلة (${n})`,sz_trph:'منها صور',sz_pl:'صور المخططات',sz_other:'بيانات أخرى',sz_mb:m=>m+' ميغابايت',
+ sz_trash_ph:'حذف الصور من السلة',sz_trash_ph_sub:'يمكن استعادة المحذوفات لكن بدون صور',
+ sz_trash_all:'إفراغ السلة بالكامل',sz_trash_all_sub:'لن يمكن استعادة المحذوفات',sz_trash_all_q:n=>`حذف ${n} عنصر من السلة نهائيًا؟`,
+ sz_shrink:'تصغير صور العمال والمعدات',sz_shrink_sub:'حتى 800 بكسل — تبدو كما هي على الهاتف وحجمها أصغر 2–3 مرات',
+ sz_shrink_q:'تصغير كل الصور؟',sz_shrink_t:'ستصبح الصور أخف. لا يمكن تكبيرها مرة أخرى. تُحفظ نسخة تلقائية قبل ذلك.',sz_shrink_btn:'تصغير',
+ sz_working:'جارٍ معالجة الصور…',sz_done:(a,b)=>`تم: كان ${a} ميغابايت، أصبح ${b} ميغابايت`,sz_after:'احفظ الآن نسخة جديدة — يمكن حذف الملف القديم.',sz_save_now:'حفظ نسخة جديدة',
+ trash_clear:'إفراغ السلة',
  _end:''
 };
 
 if(window.PL&&PL.init)try{PL.init()}catch(e){console.warn('plan init',e)}
+if(window.SM&&SM.init)try{SM.init()}catch(e){console.warn('smena init',e)}
 /* ================= settings & db ================= */
 const DEF_REM=[['07:00','nariad'],['07:30','nariad'],['08:30','nariad'],['09:00','nariad'],['13:30','nariad2'],['13:50','nariad2'],['16:10','fact'],['16:20','fact'],['17:05','report'],['17:10','report']].map(([time,kind],i)=>({id:'r'+i,time,kind}));
 let S={lang:'ru',reportLang:'ru',workdays:[6,0,1,2,3,4],reminders:clone(DEF_REM),brigades:[],places:[],sections:[],times:{start:'08:30',lunchFrom:'13:00',lunchTo:'14:00',end:''},lastOrigin:'',lastBrigade:''};
@@ -1486,7 +1506,7 @@ function sitesHTML(d){
 }
 function reportHTML(d){
   const txt=d.reportEdit||genReport(d,S.reportLang);
-  return `<section id="card-report" class="tc"><div class="ch"><span class="cic wa">${ic('send',18)}</span><b>${t('report')}</b>${d.reportEdit?`<em class="badge">${t('edited')}</em>`:''}<button class="ib" data-act="rep-edit" aria-label="${t('rep_edit')}">${ic('edit',18)}</button></div><pre class="rep bidi" id="repTxt">${esc(txt)}</pre><div class="foot"><button class="fb" data-act="copy">${ic('copy',18)} ${t('copy')}</button><button class="fb wa" data-act="wa">${ic('send',18)} WhatsApp</button></div><button class="sentrow" data-act="sent"><span class="chk ${d.sent?'on':''}">${d.sent?ic('check',18):''}</span>${d.sent?t('sent_at',timeOf(d.sentAt)):t('sent_mark')}</button></section>`;
+  return `<section id="card-report" class="tc"><div class="ch"><span class="cic wa">${ic('send',18)}</span><b>${t('report')}</b>${d.reportEdit?`<em class="badge">${t('edited')}</em>`:''}<button class="ib" data-act="rep-edit" aria-label="${t('rep_edit')}">${ic('edit',18)}</button></div><pre class="rep bidi" id="repTxt">${esc(txt)}</pre><div class="foot"><button class="fb" data-act="copy">${ic('copy',18)} ${t('copy')}</button><button class="fb wa" data-act="wa">${ic('send',18)} WhatsApp</button></div>${window.SM?`<button class="fb" style="width:100%;margin-top:8px" data-act="smena">${ic('nariad',18)} ${t('sm_btn')}</button>`:''}<button class="sentrow" data-act="sent"><span class="chk ${d.sent?'on':''}">${d.sent?ic('check',18):''}</span>${d.sent?t('sent_at',timeOf(d.sentAt)):t('sent_mark')}</button></section>`;
 }
 function tasksHTML(d){
   const pu=prevUndone(d.id),tasks=[...d.tasks.filter(k=>!k.done),...d.tasks.filter(k=>k.done)];
@@ -1600,6 +1620,7 @@ async function todayClick(e){
       await persistDay(d);return renderList()}
     case 'copy':return copyText(d.reportEdit||genReport(d,S.reportLang));
     case 'wa':return sendWA(d);
+    case 'smena':return SM.open(d.id);
     case 'rep-edit':return reportEditSheet(d);
     case 'sent':if(d.sent){d.sent=false;d.sentAt=0;await persistDay(d);renderList()}else await markSent(d);return;
     case 'taskAdd':return addTask();
@@ -1910,8 +1931,9 @@ function summarySheet(){
 function trashSheet(){
   const items=data.trash.slice().sort((a,b)=>b.deletedAt-a.deletedAt);
   const body=items.length?items.map(x=>`<button class="srow" data-tid="${x.id}"><div class="bidi">${esc(x.item.name)}<div class="sub">${t('kind_'+x.kind)} · ${t('days_left',Math.max(0,30-Math.floor((Date.now()-x.deletedAt)/DAY)))}</div></div>${ic('chev',18)}</button>`).join(''):emptyHTML('trash',t('trash_empty'));
-  const w=sheet({title:t('trash'),body,left:t('close'),tapOut:true});
+  const w=sheet({title:t('trash'),body:body+(items.length?`<button class="btn danger wide" style="margin-top:10px" data-trclr>${ic('trash',18)} ${t('trash_clear')}</button>`:''),left:t('close'),tapOut:true});
   w.addEventListener('click',async e=>{
+    if(e.target.closest('[data-trclr]')){if(await confirmDlg(t('sz_trash_all_q',data.trash.length),'')){await clearS('trash');data.trash=[];await touch();w.close();toast(t('deleted'))}return}
     const r=e.target.closest('[data-tid]');if(!r)return;
     const x=data.trash.find(y=>y.id===r.dataset.tid);if(!x)return;
     const a=await ask({title:x.item.name,buttons:[{l:t('restore_item'),v:'restore',c:'pri'},{l:t('purge'),v:'purge',c:'danger'},{l:t('cancel'),v:false}]});
@@ -2299,8 +2321,10 @@ function daySheet(d){
   const rep=d.reportCache||genReport(d,S.reportLang);
   const body=`${d.ext?`<div class="pc me bidi" style="margin-bottom:10px">${esc(t('ext_by',d.author||'?'))}</div>`:''}<pre class="rep bidi" style="max-height:none">${esc(rep)}</pre><div class="foot"><button class="fb" data-c>${ic('copy',18)} ${t('copy')}</button><button class="fb wa" data-w>${ic('send',18)} WhatsApp</button></div>
   ${(d.tasks||[]).length?`<div class="fld" style="margin-top:16px"><label>${t('tasks')}</label><div class="hist">${d.tasks.map(k=>`<div><span>${k.done?'✓':'—'}</span>${esc(k.text)}</div>`).join('')}</div></div>`:''}
+  ${window.SM&&(d.sites||[]).length?`<button class="btn wide" style="margin-top:12px" data-sm>${ic('nariad',18)} ${t('sm_btn')}</button>`:''}
   ${d.ext?`<button class="btn danger wide" data-del>${ic('trash',18)} ${t('del')}</button>`:''}`;
   const w=sheet({title:fmt(dDate(d)),left:t('close'),tapOut:true,body});
+  const smb=$('[data-sm]',w);if(smb)smb.onclick=()=>SM.open(d.id);
   $('[data-c]',w).onclick=()=>copyText(rep);$('[data-w]',w).onclick=()=>openWA(rep);
   const dl=$('[data-del]',w);if(dl)dl.onclick=async()=>{if(await confirmDlg(t('del'),esc(fmt(dDate(d))))){await del('days',d.id);data.days=data.days.filter(x=>x.id!==d.id);await touch();$$('.host').forEach(h=>h.close())}};
 }
@@ -2383,7 +2407,7 @@ function transSheet(){
 }
 
 /* ================= backup ================= */
-const SKEYS=['lang','reportLang','workdays','reminders','brigades','places','sections','times','lastOrigin','lastBrigade','naryads','officials','ar','myName','betaPlan'];
+const SKEYS=['smItr','smItrs','smExec','smReasons','lang','reportLang','workdays','reminders','brigades','places','sections','times','lastOrigin','lastBrigade','naryads','officials','ar','myName','betaPlan'];
 function backupPayload(){const st={};SKEYS.forEach(k=>st[k]=S[k]);return {app:'uchet',version:3,exported:new Date().toISOString(),workers:data.workers,tools:data.tools,small:data.small,trash:data.trash,days:data.days.filter(d=>d.updated||d.sites.length||d.tasks.length),types:data.types,plans:data.plans,settings:st}}
 async function markExported(){meta.dirty=0;meta.lastExport=Date.now();await put('meta',{k:'dirty',v:0});await put('meta',{k:'lastExport',v:meta.lastExport});renderBanner();renderGear()}
 async function shareFile(blob,name,type,title){
@@ -2469,6 +2493,45 @@ async function snapsSheet(){
   };
 }
 
+/* ================= v8: backup size & cleaning old photos ================= */
+const isData=p=>typeof p==='string'&&p.startsWith('data:');
+const phLen=o=>o?(isData(o.photo)?o.photo.length:0)+(isData(o.thumb)?o.thumb.length:0):0;
+const MB=n=>(n/1048576).toFixed(n<1048576?2:1).replace('.',S.lang==='ar'?'.':',');
+function sizeInfo(){
+  const total=JSON.stringify(backupPayload()).length;
+  const w=data.workers.reduce((a,o)=>a+phLen(o),0),tl=data.tools.reduce((a,o)=>a+phLen(o),0);
+  const tr=JSON.stringify(data.trash).length,trph=data.trash.reduce((a,x)=>a+phLen(x.item),0);
+  const pl=(data.plans||[]).reduce((a,p)=>a+(p.bg&&isData(p.bg.src)?p.bg.src.length:0),0);
+  return {total,w,tl,tr,trph,pl,other:Math.max(0,total-w-tl-tr-pl)};
+}
+function shrinkData(src,max,q){return new Promise(res=>{const im=new Image();im.onload=()=>{const k=Math.max(im.naturalWidth,im.naturalHeight);if(k<=max){res(src);return}const o=drawImg(im,max,q);res(o.length<src.length?o:src)};im.onerror=()=>res(src);im.src=src})}
+async function sizeSheet(){
+  const draw=()=>{const z=sizeInfo(),row=(l,v,sub)=>`<div class="pv2"><b>${l}</b><span class="num">${t('sz_mb',MB(v))}</span></div>`;
+    return `<div class="note">${t('sz_intro')}</div>
+    <div class="card" style="padding:4px 14px;margin-bottom:14px">${row(t('sz_total'),z.total)}${row(t('sz_w'),z.w)}${row(t('sz_t'),z.tl)}${row(t('sz_tr',data.trash.length),z.tr)}${z.trph?`<div class="pv2"><b style="color:var(--sub);font-weight:600">· ${t('sz_trph')}</b><span class="num">${t('sz_mb',MB(z.trph))}</span></div>`:''}${z.pl?row(t('sz_pl'),z.pl):''}${row(t('sz_other'),z.other)}</div>
+    <button class="menu" data-z="trph" ${z.trph?'':'disabled'}><div>${t('sz_trash_ph')}<small>${t('sz_trash_ph_sub')}</small></div>${ic('image',20)}</button>
+    <button class="menu" data-z="trall" ${data.trash.length?'':'disabled'}><div>${t('sz_trash_all')}<small>${t('sz_trash_all_sub')}</small></div>${ic('trash',20)}</button>
+    <button class="menu" data-z="shrink" ${z.w+z.tl?'':'disabled'}><div>${t('sz_shrink')}<small>${t('sz_shrink_sub')}</small></div>${ic('download',20)}</button>
+    <div id="szdone"></div>`};
+  const w=sheet({title:t('sz'),left:t('close'),tapOut:true,body:`<div id="szb">${draw()}</div>`});
+  const done=async before=>{$('#szb',w).innerHTML=draw();const after=sizeInfo().total;
+    $('#szdone',w).innerHTML=`<div class="note" style="margin-top:12px"><b>${t('sz_done',MB(before),MB(after))}</b><br>${t('sz_after')}</div><button class="btn pri wide" data-z="save">${ic('save',20)} ${t('sz_save_now')}</button>`;await touch()};
+  $('#szb',w).onclick=async e=>{
+    const b=e.target.closest('[data-z]');if(!b||b.disabled)return;const k=b.dataset.z,before=sizeInfo().total;
+    if(k==='save')return exportBackup();
+    if(k==='trph'){for(const x of data.trash){if(phLen(x.item)){x.item.photo=null;x.item.thumb=null;await put('trash',x)}}return done(before)}
+    if(k==='trall'){if(!(await confirmDlg(t('sz_trash_all_q',data.trash.length),'')))return;await clearS('trash');data.trash=[];return done(before)}
+    if(k==='shrink'){
+      if(!(await ask({title:t('sz_shrink_q'),text:esc(t('sz_shrink_t')),buttons:[{l:t('sz_shrink_btn'),v:true,c:'pri'},{l:t('cancel'),v:false}]})).v)return;
+      await snapNow('pre').catch(()=>{});toast(t('sz_working'));
+      for(const kind of ['workers','tools']){for(const o of data[kind]){if(!phLen(o))continue;
+        const np=isData(o.photo)?await shrinkData(o.photo,800,.72):o.photo,nt=isData(o.thumb)?await shrinkData(o.thumb,220,.7):o.thumb;
+        if(np!==o.photo||nt!==o.thumb){o.photo=np;o.thumb=nt;await put(kind,o)}}}
+      for(const x of data.trash){const o=x.item;if(!phLen(o))continue;if(isData(o.photo))o.photo=await shrinkData(o.photo,800,.72);if(isData(o.thumb))o.thumb=await shrinkData(o.thumb,220,.7);await put('trash',x)}
+      render();return done(before)}
+  };
+}
+
 /* ================= v8: what's new & update prompt ================= */
 const APP_VER='8';
 function whatsNew(){
@@ -2527,6 +2590,7 @@ function moreSheet(){
     <button class="menu" data-m="backup"><div>${t('save_copy')}<small data-lastbk>${esc(bkStatus())}</small></div>${ic('save',20)}</button>
     <label class="menu" style="display:flex"><div>${t('restore')}<small>${t('restore_or_people_sub')}</small></div>${ic('undo',20)}<input type="file" accept=".json,application/json" hidden data-restore></label>
     <button class="menu" data-m="sc"><div>${t('one_file')}<small>${t('one_file_sub')}</small></div>${ic('chev',18)}</button>
+    <button class="menu" data-m="size"><div>${t('sz')}<small data-szn>${t('sz_sub',MB(sizeInfo().total))}</small></div>${ic('archive',20)}</button>
     <button class="menu" data-m="snaps"><div>${t('snaps')}<small data-snapn>${t('snaps_sub',0)}</small></div>${ic('clock',20)}</button>
     <div class="lab" style="margin-top:14px">${t('my_name')}</div>
     <input data-myname class="bidi" value="${esc(S.myName||'')}" placeholder="${esc(t('my_name_ph'))}" autocomplete="off" autocapitalize="words">
@@ -2563,7 +2627,7 @@ function moreSheet(){
   const w=sheet({title:t('more'),body,left:t('close'),tapOut:true,onClose:()=>render()});
   w.addEventListener('click',async e=>{
     const m=e.target.closest('[data-m]');
-    if(m){({snaps:snapsSheet,wn:whatsNew,rem:remSheet,backup:exportBackup,sc:shortcutSheet,summary:summarySheet,archive:archiveSheet,types:typesSheet,trash:trashSheet,stats:statsSheet,tabel:tabelSheet,import:importSheet,naryads:naryadsListSheet,offs:officialsSheet,ext:extReportSheet,trans:transSheet,brig:brigadesSheet,dict:dictSheet})[m.dataset.m]();return}
+    if(m){({size:sizeSheet,snaps:snapsSheet,wn:whatsNew,rem:remSheet,backup:exportBackup,sc:shortcutSheet,summary:summarySheet,archive:archiveSheet,types:typesSheet,trash:trashSheet,stats:statsSheet,tabel:tabelSheet,import:importSheet,naryads:naryadsListSheet,offs:officialsSheet,ext:extReportSheet,trans:transSheet,brig:brigadesSheet,dict:dictSheet})[m.dataset.m]();return}
     const be=e.target.closest('[data-beta] button');
     if(be){const on=be.dataset.v==='1';be.parentElement.dataset.v=on?1:0;await setSetting('betaPlan',on);applyLang();return}
     const dd=e.target.closest('#wdays button');
