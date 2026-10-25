@@ -11,7 +11,12 @@ const I18N={ru:{
  sm_off:'Не включать',sm_on:'Включить',sm_extra:'Своя строка',sm_extra_del:'Удалить строку',
  sm_sig:'Подписи',sm_itr:'Ответственный ИТР выдал — ФИО',sm_exec:'Ответственный исполнитель работ получил — ФИО',sm_itr_ph:'Например: Иванов И.И.',
  sm_auto:'авто',sm_empty:'На этот день нет работ. Добавьте участок и работы во вкладке «Сегодня» или свою строку.',
- sm_rows:n=>`Строк в бланке: ${n}`,sm_saved:'Файл готов',sm_fact_note:'Факт меняется и в отчёте дня'
+ sm_rows:n=>`Строк в бланке: ${n}`,sm_saved:'Файл готов',sm_fact_note:'Факт меняется и в отчёте дня',
+ sm_people:'Людей на эти работы',sm_shared:n=>`Общее число на ${n} ${plural(n,['работу','работы','работ'])} — в бланке одна объединённая ячейка`,
+ sm_join:'Объединить с работой выше',sm_split:'Разделить: своё число людей',
+ sm_sites:'Люди по участкам',sm_site_line:(a,b,c,dd)=>`на участке: СНГ ${a} · АРЕ ${b}  →  в бланке: СНГ ${c} · АРЕ ${dd}`,sm_site_ok:'Сходится с перекличкой',sm_site_bad:'Не сходится с перекличкой — проверьте числа',
+ sm_offrows:'Не включены в бланк',
+ sm_back:'Оборот листа — схема',sm_back_on:'Печатать схему на обороте',sm_back_title:'Заголовок',sm_back_img:'Заменить картинку',sm_back_def:'Вернуть схему 20UJA',sm_back_custom:'своя картинка',sm_back_noimg:'Схема не загрузилась — проверьте интернет при первом запуске'
 },ar:{
  sm_title:'مهمة الوردية',sm_btn:'مهمة الوردية (Word)',sm_word:'تنزيل Word',
  sm_hint:'كل شيء مُعبّأ من مواقع وأعمال اليوم. صحّح النص عند الحاجة واكتب السبب حيث المنجز أقل من الخطة. نص النموذج بالروسية.',
@@ -20,7 +25,12 @@ const I18N={ru:{
  sm_off:'عدم التضمين',sm_on:'تضمين',sm_extra:'سطر خاص',sm_extra_del:'حذف السطر',
  sm_sig:'التوقيعات',sm_itr:'المهندس المسؤول (سلّم) — الاسم',sm_exec:'منفّذ الأعمال المسؤول (استلم) — الاسم',sm_itr_ph:'مثلًا: إيفانوف إ.إ.',
  sm_auto:'تلقائي',sm_empty:'لا توجد أعمال في هذا اليوم. أضف موقعًا وأعمالًا في تبويب «اليوم» أو سطرًا خاصًا.',
- sm_rows:n=>`عدد الأسطر في النموذج: ${n}`,sm_saved:'الملف جاهز',sm_fact_note:'يتغير المنجز في تقرير اليوم أيضًا'
+ sm_rows:n=>`عدد الأسطر في النموذج: ${n}`,sm_saved:'الملف جاهز',sm_fact_note:'يتغير المنجز في تقرير اليوم أيضًا',
+ sm_people:'عدد العمال لهذه الأعمال',sm_shared:n=>`عدد مشترك لـ ${n} أعمال — خلية واحدة مدمجة في النموذج`,
+ sm_join:'دمج مع العمل أعلاه',sm_split:'فصل: عدد عمال خاص',
+ sm_sites:'العمال حسب المواقع',sm_site_line:(a,b,c,dd)=>`في الموقع: СНГ ${a} · АРЕ ${b}  →  في النموذج: СНГ ${c} · АРЕ ${dd}`,sm_site_ok:'مطابق للتفقد',sm_site_bad:'غير مطابق للتفقد — تحقق من الأرقام',
+ sm_offrows:'غير مضمّنة في النموذج',
+ sm_back:'ظهر الورقة — المخطط',sm_back_on:'طباعة المخطط على الظهر',sm_back_title:'العنوان',sm_back_img:'استبدال الصورة',sm_back_def:'إرجاع مخطط 20UJA',sm_back_custom:'صورة خاصة',sm_back_noimg:'لم يُحمَّل المخطط — تحقق من الإنترنت عند أول تشغيل'
 }};
 function init(){Object.assign(L.ru,I18N.ru);Object.assign(L.ar,I18N.ar)}
 
@@ -32,21 +42,28 @@ const q=(v,u)=>{v=String(v==null?'':v).trim();return v?(u?v+' '+u:v):''};
 function build(d){
   const z=d.smena||{},ov=z.rows||{},so=z.sites||{};
   const present=d.ext?[]:(d.id===iso()?presentIds(d):(d.present||presentIds(d)));
-  const groups=[];
+  const sites=[],rows=[];
   (d.sites||[]).forEach(s=>{
     const ws=(s.works||[]).filter(w=>String(w.name||'').trim());if(!ws.length)return;
-    let aS='',aA='';
-    if(!d.ext&&d.roll!==false){const ivs=siteIntervals(d,s,present),ids=[...new Set(ivs.reduce((a,iv)=>a.concat(iv.ids),[]))],gc=groupCounts(ids);aS=String(sumO(gc,'sng'));aA=String(sumO(gc,'are'))}
-    const o=so[s.id]||{};
-    const ivs=d.ext?[]:siteIntervals(d,s,present),single=ivs.length===1&&!fullDay(ivs)?lc1(ivLabel(ivs[0],'ru')):'';
-    const place=[s.place,s.section].filter(Boolean).join(', ');
-    const rows=ws.map(w=>{const r=ov[w.id]||{},pl=nf(w.plan),fc=nf(w.fact);
-      return {id:w.id,w,desc:r.desc!=null?r.desc:(String(w.name).trim().replace(/\.+$/,'')+(place?' — '+place:'')+(single?' ('+single+')':'')),
-        plan:q(w.plan,w.unit),fact:q(w.fact,w.unit),why:r.why||'',off:!!r.off,short:isFinite(pl)&&isFinite(fc)&&fc<pl,nofact:!!String(w.plan||'').trim()&&!String(w.fact||'').trim()&&!!w.unit}});
-    groups.push({sid:s.id,title:[s.place,s.section].filter(Boolean).join(' · ')||t('no_place'),sng:o.sng!=null?o.sng:aS,are:o.are!=null?o.are:aA,aS,aA,rows});
+    let aS='',aA='';const ivs=d.ext?[]:siteIntervals(d,s,present);
+    if(!d.ext){const ids=[...new Set(ivs.reduce((a,iv)=>a.concat(iv.ids),[]))],gc=groupCounts(ids);aS=String(sumO(gc,'sng'));aA=String(sumO(gc,'are'))}
+    const single=ivs.length===1&&!fullDay(ivs)?lc1(ivLabel(ivs[0],'ru')):'';
+    const place=[s.place,s.section].filter(Boolean).join(', '),title=[s.place,s.section].filter(Boolean).join(' · ')||t('no_place');
+    sites.push({sid:s.id,title,aS,aA});
+    ws.forEach((w,k)=>{const r=ov[w.id]||{},pl=nf(w.plan),fc=nf(w.fact);
+      rows.push({id:w.id,sid:s.id,site:title,w,desc:r.desc!=null?r.desc:(String(w.name).trim().replace(/\.+$/,'')+(place?' — '+place:'')+(single?' ('+single+')':'')),
+        plan:q(w.plan,w.unit),fact:q(w.fact,w.unit),why:r.why||'',off:!!r.off,join:r.join!=null?!!r.join:k>0,cS:r.sng,cA:r.are,
+        short:isFinite(pl)&&isFinite(fc)&&fc<pl,nofact:!!String(w.plan||'').trim()&&!String(w.fact||'').trim()&&!!w.unit})});
   });
-  (z.extra||[]).forEach(x=>groups.push({extra:true,id:x.id,sng:x.sng||'',are:x.are||'',rows:[{id:x.id,extra:true,desc:x.desc||'',plan:x.plan||'',fact:x.fact||'',why:x.why||'',off:false}]}));
-  return groups;
+  (z.extra||[]).forEach(x=>rows.push({id:x.id,extra:true,sid:'',site:'',desc:x.desc||'',plan:x.plan||'',fact:x.fact||'',why:x.why||'',off:false,join:!!x.join,cS:x.sng||undefined,cA:x.are||undefined}));
+  const on=rows.filter(r=>!r.off),blocks=[];
+  on.forEach((r,i)=>{if(r.join&&blocks.length)blocks[blocks.length-1].rows.push(r);else blocks.push({head:r,rows:[r]})});
+  blocks.forEach(bk=>{const h=bk.head,st=sites.find(x=>x.sid===h.sid),firstOfSite=st&&on.find(r=>r.sid===h.sid)===h,mg=so[h.sid]||{};
+    bk.aS=firstOfSite?st.aS:'';bk.aA=firstOfSite?st.aA:'';
+    bk.sng=h.cS!=null&&h.cS!==''?String(h.cS):(firstOfSite&&mg.sng!=null?mg.sng:bk.aS);
+    bk.are=h.cA!=null&&h.cA!==''?String(h.cA):(firstOfSite&&mg.are!=null?mg.are:bk.aA);});
+  sites.forEach(st=>{let a=0,b=0;blocks.forEach(bk=>{if(bk.head.sid===st.sid){a+=+bk.sng||0;b+=+bk.are||0}});st.cS=a;st.cA=b});
+  return {rows,blocks,sites,off:rows.filter(r=>r.off)};
 }
 
 /* ---------- Word (.docx) ---------- */
@@ -59,16 +76,16 @@ function para(text,sz,center,b){
 }
 const W_=[5240,709,709,1134,1134,1989];
 function cell(i,inner,merge){return `<w:tc><w:tcPr><w:tcW w:w="${W_[i]}" w:type="dxa"/>${merge==='start'?'<w:vMerge w:val="restart"/>':merge==='cont'?'<w:vMerge/>':''}<w:vAlign w:val="${i?'center':'top'}"/></w:tcPr>${inner}</w:tc>`}
-function docXML(d,groups,z){
-  const rows=[];groups.forEach(g=>{const on=g.rows.filter(r=>!r.off);on.forEach((r,k)=>rows.push({r,g,first:k===0,multi:on.length>1}))});
+function docXML(d,B,z,back){
+  const rows=[];B.blocks.forEach(bk=>bk.rows.forEach((r,k)=>rows.push({r,bk,first:k===0,multi:bk.rows.length>1})));
   const n=Math.max(7,rows.length),h=n<=7?1520:Math.max(560,Math.floor(10640/n));
   let body='';
-  rows.forEach(({r,g,first,multi})=>{
+  rows.forEach(({r,bk,first,multi})=>{
     const m=multi?(first?'start':'cont'):'';
     body+=`<w:tr><w:trPr><w:trHeight w:val="${h}"/></w:trPr>`+
       cell(0,para(r.desc,20))+
-      cell(1,first?para(g.sng,22,true):para('',22,true),m)+
-      cell(2,first?para(g.are,22,true):para('',22,true),m)+
+      cell(1,para(first?(bk.sng||(bk.are?'0':'')):'',22,true),m)+
+      cell(2,para(first?(bk.are||(bk.sng?'0':'')):'',22,true),m)+
       cell(3,para(r.plan,20,true))+cell(4,para(r.fact,20,true))+cell(5,para(r.why,18))+`</w:tr>`;
   });
   for(let i=rows.length;i<n;i++)body+=`<w:tr><w:trPr><w:trHeight w:val="${h}"/></w:trPr>`+W_.map((_,k)=>cell(k,para('',20))).join('')+`</w:tr>`;
@@ -78,7 +95,15 @@ function docXML(d,groups,z){
   const date=fmt(dDate(d));
   const logo=TPL.logo.replace('</w:p>',`<w:r>${RPR(24,true)}<w:tab/><w:t xml:space="preserve">Ежедневное сменное задание от ${X(date)}</w:t></w:r></w:p>`)
     .replace('<w:pPr>','<w:pPr><w:tabs><w:tab w:val="right" w:pos="9355"/></w:tabs>');
-  return TPL.head+logo+TPL.tbl+TPL.hdr+body+'</w:tbl>'+para('',2)+para('',2)+sig+para('',20)+TPL.sect+'</w:body></w:document>';
+  let tail=para('',20);
+  if(back){
+    const MW=6906878,MH=8100000,k=Math.min(MW/back.w,MH/back.h),cx=Math.round(back.w*k),cy=Math.round(back.h*k);
+    tail=`<w:p><w:r><w:br w:type="page"/></w:r></w:p>`+
+      (back.title?`<w:p><w:pPr>${RPR(40)}</w:pPr><w:r>${RPR(40)}<w:t xml:space="preserve">${X(back.title)}</w:t></w:r></w:p>`:'')+
+      `<w:p><w:pPr><w:spacing w:after="0"/>${RPR(32)}</w:pPr><w:r>${RPR(32)}<w:t xml:space="preserve">Ежедневное сменное задание</w:t></w:r></w:p>`+
+      `<w:p><w:pPr><w:ind w:left="-1134"/></w:pPr><w:r><w:drawing><wp:inline distT="0" distB="0" distL="0" distR="0"><wp:extent cx="${cx}" cy="${cy}"/><wp:effectExtent l="0" t="0" r="0" b="0"/><wp:docPr id="10" name="Схема"/><wp:cNvGraphicFramePr><a:graphicFrameLocks xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" noChangeAspect="1"/></wp:cNvGraphicFramePr><a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:nvPicPr><pic:cNvPr id="10" name="scheme.jpeg"/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip r:embed="rId8"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="${cx}" cy="${cy}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r></w:p>`;
+  }
+  return TPL.head+logo+TPL.tbl+TPL.hdr+body+'</w:tbl>'+para('',2)+para('',2)+sig+tail+TPL.sect+'</w:body></w:document>';
 }
 const CRC=(()=>{const tb=new Uint32Array(256);for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;tb[n]=c>>>0}return tb})();
 function crc32(u){let c=0xFFFFFFFF;for(let i=0;i<u.length;i++)c=CRC[(c^u[i])&255]^(c>>>8);return (c^0xFFFFFFFF)>>>0}
@@ -93,14 +118,27 @@ function zip(files){
   e.setUint32(0,0x06054b50,true);e.setUint16(8,files.length,true);e.setUint16(10,files.length,true);e.setUint32(12,cs,true);e.setUint32(16,off,true);
   return new Blob([...parts,...cent,new Uint8Array(e.buffer)],{type:'application/vnd.openxmlformats-officedocument.wordprocessingml.document'});
 }
-function docxBlob(d){
+const DEF_BACK={on:true,title:'20UJA Визуализация c отм. -19,200',img:null};
+const backCfg=()=>Object.assign({},DEF_BACK,S.smBack||{});
+const u8b64=s=>{const bin=atob(s),u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);return u};
+async function backImage(){
+  const c=backCfg();if(!c.on)return null;let bytes=null;
+  try{if(c.img)bytes=u8b64(c.img.split(',')[1]);else{const r=await fetch('smena/scheme.jpg');if(!r.ok)throw new Error('x');bytes=new Uint8Array(await r.arrayBuffer())}}catch(e){return {err:true}}
+  const url=URL.createObjectURL(new Blob([bytes],{type:'image/jpeg'}));
+  const dim=await new Promise(res=>{const im=new Image();im.onload=()=>res([im.naturalWidth,im.naturalHeight]);im.onerror=()=>res([1581,1560]);im.src=url});URL.revokeObjectURL(url);
+  return {bytes,w:dim[0],h:dim[1],title:c.title};
+}
+async function docxBlob(d){
   const z=d.smena||{},enc=new TextEncoder(),now=new Date().toISOString().replace(/\.\d+Z$/,'Z');
+  const back=await backImage();const bk=back&&!back.err?back:null;
   const core=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:dcmitype="http://purl.org/dc/dcmitype/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><dc:title>Ежедневное сменное задание ${X(fmt(dDate(d)))}</dc:title><dc:creator>${X(S.myName||'')}</dc:creator><cp:lastModifiedBy>${X(S.myName||'')}</cp:lastModifiedBy><cp:revision>1</cp:revision><dcterms:created xsi:type="dcterms:W3CDTF">${now}</dcterms:created><dcterms:modified xsi:type="dcterms:W3CDTF">${now}</dcterms:modified></cp:coreProperties>`;
-  const bin=atob(TPL.logo64),png=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)png[i]=bin.charCodeAt(i);
-  const files=[{name:'[Content_Types].xml',data:enc.encode(TPL.files['[Content_Types].xml'])},{name:'_rels/.rels',data:enc.encode(TPL.files['_rels/.rels'])},
-    {name:'word/document.xml',data:enc.encode(docXML(d,build(d),z))},{name:'docProps/core.xml',data:enc.encode(core)},{name:'word/media/image1.png',data:png}];
+  let ct=TPL.files['[Content_Types].xml'],rels=TPL.files['word/_rels/document.xml.rels'];
+  if(bk){ct=ct.replace('<Default Extension="png"','<Default Extension="jpeg" ContentType="image/jpeg"/><Default Extension="png"');rels=rels.replace('</Relationships>','<Relationship Id="rId8" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/image2.jpeg"/></Relationships>')}
+  const files=[{name:'[Content_Types].xml',data:enc.encode(ct)},{name:'_rels/.rels',data:enc.encode(TPL.files['_rels/.rels'])},
+    {name:'word/document.xml',data:enc.encode(docXML(d,build(d),z,bk))},{name:'word/_rels/document.xml.rels',data:enc.encode(rels)},{name:'docProps/core.xml',data:enc.encode(core)},{name:'word/media/image1.png',data:u8b64(TPL.logo64)}];
+  if(bk)files.push({name:'word/media/image2.jpeg',data:bk.bytes});
   Object.keys(TPL.files).forEach(k=>{if(!files.some(f=>f.name===k))files.push({name:k,data:enc.encode(TPL.files[k])})});
-  return zip(files);
+  return {blob:zip(files),backErr:!!(back&&back.err)};
 }
 
 /* ---------- лист в приложении ---------- */
@@ -111,29 +149,41 @@ function open(dayId){
   if(z.exec==null)z.exec=S.smExec||S.myName||'';if(z.itr==null)z.itr=S.smItr||'';
   const offs=(S.officials||[]).slice().sort((a,b)=>(a.rank||3)-(b.rank||3)).map(o=>o.name);
   const itrs=[...new Set([...(S.smItrs||[]),...offs].filter(Boolean))].slice(0,8);
+  const reasons=()=>REASONS.concat(S.smReasons||[]).filter((v,i,a)=>a.indexOf(v)===i).slice(0,9);
+  const rowHTML=r=>`<div class="smr ${r.off?'off':''} ${r.short&&!r.why?'need':''}" data-rid="${r.id}">
+    ${r.site?`<div class="sms bidi">${esc(r.site)}</div>`:''}
+    <div class="smrt"><textarea dir="auto" rows="2" data-r="desc" data-id="${r.id}" ${r.extra?'data-x="1"':''} aria-label="${t('sm_desc')}">${esc(r.desc)}</textarea>${r.extra?`<button class="smx" data-xdel="${r.id}" aria-label="${t('sm_extra_del')}">${ic('trash',17)}</button>`:`<button class="smx" data-off="${r.id}" aria-label="${r.off?t('sm_on'):t('sm_off')}" title="${r.off?t('sm_on'):t('sm_off')}">${ic(r.off?'plus':'x',17)}</button>`}</div>
+    ${r.off?'':`<div class="smq"><label><span>${t('sm_plan')}</span><input data-r="plan" data-id="${r.id}" ${r.extra?'data-x="1"':''} value="${esc(r.extra?r.plan:(r.w.plan||''))}" ${r.extra?'':'inputmode="decimal"'}>${r.extra||!r.w.unit?'':`<i>${esc(r.w.unit)}</i>`}</label><label><span>${t('sm_fact')}</span><input data-r="fact" data-id="${r.id}" ${r.extra?'data-x="1"':''} value="${esc(r.extra?r.fact:(r.w.fact||''))}" ${r.extra?'':'inputmode="decimal"'}>${r.extra||!r.w.unit?'':`<i>${esc(r.w.unit)}</i>`}</label></div>
+    ${r.short?`<div class="smw">${ic('alert',15)} ${t('sm_short')}</div>`:r.nofact?`<div class="smw soft">${ic('clock',15)} ${t('sm_nofact')}</div>`:''}
+    <input class="smy" dir="auto" data-r="why" data-id="${r.id}" ${r.extra?'data-x="1"':''} value="${esc(r.why)}" placeholder="${t('sm_why')}">
+    ${r.short||r.why?`<div class="smc">${reasons().map(v=>`<button class="chip ${v===r.why?'on':''}" data-why="${esc(v)}" data-id="${r.id}" ${r.extra?'data-x="1"':''}>${esc(v)}</button>`).join('')}</div>`:''}`}
+  </div>`;
   const draw=()=>{
-    const gs=build(d);const nOn=gs.reduce((a,g)=>a+g.rows.filter(r=>!r.off).length,0);
+    const B=build(d),nOn=B.rows.filter(r=>!r.off).length;
     let h=`<div class="note"><b>${esc(fmt(dDate(d)))}</b> · ${t('sm_hint')}</div>`;
-    if(!gs.length)h+=`<div class="note">${t('sm_empty')}</div>`;
-    gs.forEach(g=>{
-      h+=`<div class="smg">${g.extra?'':`<div class="smh"><b class="bidi">${esc(g.title)}</b>`}
-        ${g.extra?`<div class="smh"><b>${t('sm_extra')}</b><button class="smx" data-xdel="${g.id}" aria-label="${t('sm_extra_del')}">${ic('trash',17)}</button></div>`:''}
-        ${g.extra?'':`</div>`}
-        <div class="smp"><label><span>${t('sm_sng')}</span><input class="num" inputmode="numeric" data-gs="${g.extra?'x:'+g.id:g.sid}" data-k="sng" value="${esc(g.sng)}" placeholder="${esc(g.aS)}"></label><label><span>${t('sm_are')}</span><input class="num" inputmode="numeric" data-gs="${g.extra?'x:'+g.id:g.sid}" data-k="are" value="${esc(g.are)}" placeholder="${esc(g.aA)}"></label></div>`;
-      g.rows.forEach(r=>{
-        h+=`<div class="smr ${r.off?'off':''} ${r.short&&!r.why?'need':''}" data-rid="${r.id}">
-          <div class="smrt"><textarea dir="auto" rows="2" data-r="desc" data-id="${r.id}" ${r.extra?'data-x="1"':''} aria-label="${t('sm_desc')}">${esc(r.desc)}</textarea>${r.extra?'':`<button class="smx" data-off="${r.id}" aria-label="${r.off?t('sm_on'):t('sm_off')}" title="${r.off?t('sm_on'):t('sm_off')}">${ic(r.off?'plus':'x',17)}</button>`}</div>
-          ${r.off?'':`<div class="smq"><label><span>${t('sm_plan')}</span><input data-r="plan" data-id="${r.id}" ${r.extra?'data-x="1"':''} value="${esc(r.extra?r.plan:(r.w.plan||''))}" ${r.extra?'':'inputmode="decimal"'}>${r.extra||!r.w.unit?'':`<i>${esc(r.w.unit)}</i>`}</label><label><span>${t('sm_fact')}</span><input data-r="fact" data-id="${r.id}" ${r.extra?'data-x="1"':''} value="${esc(r.extra?r.fact:(r.w.fact||''))}" ${r.extra?'':'inputmode="decimal"'}>${r.extra||!r.w.unit?'':`<i>${esc(r.w.unit)}</i>`}</label></div>
-          ${r.short?`<div class="smw">${ic('alert',15)} ${t('sm_short')}</div>`:r.nofact?`<div class="smw soft">${ic('clock',15)} ${t('sm_nofact')}</div>`:''}
-          <input class="smy" dir="auto" data-r="why" data-id="${r.id}" ${r.extra?'data-x="1"':''} value="${esc(r.why)}" placeholder="${t('sm_why')}">
-          ${r.short||r.why?`<div class="smc">${REASONS.concat(S.smReasons||[]).filter((v,i,a)=>a.indexOf(v)===i).slice(0,9).map(v=>`<button class="chip ${v===r.why?'on':''}" data-why="${esc(v)}" data-id="${r.id}" ${r.extra?'data-x="1"':''}>${esc(v)}</button>`).join('')}</div>`:''}`}
-        </div>`});
+    if(!B.rows.length)h+=`<div class="note">${t('sm_empty')}</div>`;
+    const chk=B.sites.filter(s=>s.aS!==''||s.aA!=='');
+    if(chk.length)h+=`<div class="smsum"><div class="lab" style="margin:0 0 6px">${t('sm_sites')}</div>${chk.map(s=>{const ok=String(s.cS)===String(+s.aS||0)&&String(s.cA)===String(+s.aA||0);
+      return `<div class="smsl ${ok?'ok':'bad'}">${ic(ok?'check':'alert',15)}<div><b class="bidi">${esc(s.title)}</b><small class="num">${esc(t('sm_site_line',s.aS||0,s.aA||0,s.cS,s.cA))}</small></div></div>`}).join('')}</div>`;
+    B.blocks.forEach((bk,bi)=>{
+      if(bi>0)h+=`<button class="smlink" data-join="${bk.head.id}" ${bk.head.extra?'data-x="1"':''}>${ic('plus',15)} ${t('sm_join')}</button>`;
+      h+=`<div class="smg ${bk.rows.length>1?'multi':''}"><div class="smph">${t('sm_people')}</div>
+        <div class="smp"><label><span>СНГ</span><input class="num" inputmode="numeric" data-bh="${bk.head.id}" ${bk.head.extra?'data-x="1"':''} data-k="sng" value="${esc(bk.sng)}" placeholder="${esc(bk.aS||'0')}"></label><label><span>АРЕ</span><input class="num" inputmode="numeric" data-bh="${bk.head.id}" ${bk.head.extra?'data-x="1"':''} data-k="are" value="${esc(bk.are)}" placeholder="${esc(bk.aA||'0')}"></label></div>
+        ${bk.rows.length>1?`<div class="smshared">${ic('users',15)} ${t('sm_shared',bk.rows.length)}</div>`:''}`;
+      bk.rows.forEach((r,ri)=>{if(ri>0)h+=`<button class="smlink cut" data-split="${r.id}" ${r.extra?'data-x="1"':''}>${ic('x',14)} ${t('sm_split')}</button>`;h+=rowHTML(r)});
       h+=`</div>`;
     });
+    if(B.off.length)h+=`<div class="lab" style="margin-top:14px">${t('sm_offrows')}</div><div class="smg">${B.off.map(rowHTML).join('')}</div>`;
     h+=`<button class="btn wide" data-xadd>${ic('plus',18)} ${t('sm_extra')}</button>
     <div class="lab" style="margin-top:16px">${t('sm_sig')}</div>
     ${fld(t('sm_itr'),`<input dir="auto" data-sig="itr" value="${esc(z.itr||'')}" placeholder="${esc(t('sm_itr_ph'))}" autocomplete="off">${itrs.length?`<div class="crow wrap" style="margin-top:8px">${itrs.map(n=>`<button class="chip ${n===z.itr?'on':''}" data-pick="itr" data-v="${esc(n)}">${esc(n)}</button>`).join('')}</div>`:''}`)}
-    ${fld(t('sm_exec'),`<input dir="auto" data-sig="exec" value="${esc(z.exec||'')}" autocomplete="off">`)}
+    ${fld(t('sm_exec'),`<input dir="auto" data-sig="exec" value="${esc(z.exec||'')}" autocomplete="off">`)}`;
+    const bc=backCfg();
+    h+=`<div class="lab" style="margin-top:6px">${t('sm_back')}</div><div class="smg">
+      ${ynRow('image',t('sm_back_on'),'bon',bc.on,t('yes2'),t('no'))}
+      ${bc.on?`${fld(t('sm_back_title'),`<input dir="auto" data-back="title" value="${esc(bc.title||'')}" autocomplete="off">`)}
+      <div class="smbk"><img src="${bc.img||'smena/scheme.jpg'}" alt="" onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'hint',textContent:${JSON.stringify(t('sm_back_noimg'))}}))"><div><label class="btn" style="display:flex">${ic('camera',18)} ${t('sm_back_img')}<input type="file" accept="image/*" hidden data-backimg></label>${bc.img?`<button class="btn" style="margin-top:8px;width:100%" data-backdef>${ic('undo',18)} ${t('sm_back_def')}</button>`:''}</div></div>`:''}
+    </div>
     <div class="hint" style="margin:0 4px">${t('sm_rows',Math.max(7,nOn))} · ${t('sm_fact_note')}</div>`;
     return h;
   };
@@ -144,11 +194,17 @@ function open(dayId){
   const redraw=()=>{const y=$('.mb',w).scrollTop;box.innerHTML=draw();fitTA();$('.mb',w).scrollTop=y};
   const rowOv=id=>{z.rows=z.rows||{};return z.rows[id]=z.rows[id]||{}};
   const ext=id=>(z.extra||[]).find(x=>x.id===id);
+  const tgt=(id,isX)=>isX?ext(id):rowOv(id);
   const workOf=id=>{for(const s of d.sites||[])for(const wk of s.works||[])if(wk.id===id)return wk;return null};
+  const setBack=async o=>{await setSetting('smBack',Object.assign(backCfg(),o),true)};
   box.addEventListener('change',async e=>{
     const el=e.target,v=el.value;
+    if(el.matches('[data-backimg]')){const f=el.files[0];if(!f)return;try{const {img,url}=await loadImg(f);const c=document.createElement('canvas');let W=img.naturalWidth,H=img.naturalHeight;const k=Math.min(1,2200/Math.max(W,H));W=Math.round(W*k);H=Math.round(H*k);c.width=W;c.height=H;const g=c.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,W,H);g.drawImage(img,0,0,W,H);URL.revokeObjectURL(url);await setBack({img:c.toDataURL('image/jpeg',.85)});redraw()}catch(x){toast('⚠️ photo')}return}
+    if(el.dataset.back){await setBack({[el.dataset.back]:v.trim()});return}
     if(el.dataset.sig){z[el.dataset.sig]=v.trim();if(el.dataset.sig==='itr'&&v.trim())await setSetting('smItrs',[v.trim(),...(S.smItrs||[]).filter(x=>x!==v.trim())].slice(0,10),true);await setSetting(el.dataset.sig==='itr'?'smItr':'smExec',v.trim(),true);await save(d);return}
-    if(el.dataset.gs){const k=el.dataset.k;if(el.dataset.gs.startsWith('x:')){const x=ext(el.dataset.gs.slice(2));if(x)x[k]=v.trim()}else{z.sites=z.sites||{};const o=z.sites[el.dataset.gs]=z.sites[el.dataset.gs]||{};if(v.trim()==='')delete o[k];else o[k]=v.trim()}await save(d);return}
+    if(el.dataset.bh){const o=tgt(el.dataset.bh,el.dataset.x),k=el.dataset.k,val=v.trim().replace(/\D+/g,'');if(val===''){if(el.dataset.x)o[k]='';else delete o[k]}else o[k]=val;
+      if(!el.dataset.x&&z.sites){const r=workOf(el.dataset.bh);for(const s of d.sites||[])if((s.works||[]).includes(r)&&z.sites[s.id])delete z.sites[s.id][k]}
+      await save(d);redraw();return}
     if(el.dataset.r){const id=el.dataset.id,f=el.dataset.r;
       if(el.dataset.x){const x=ext(id);if(x)x[f]=v}
       else if(f==='plan'||f==='fact'){const wk=workOf(id);if(wk)wk[f]=v.trim().replace(/\s+/g,'')}
@@ -159,23 +215,36 @@ function open(dayId){
   });
   box.addEventListener('input',e=>{const a=e.target;if(a.tagName==='TEXTAREA'){a.style.height='auto';a.style.height=a.scrollHeight+'px'}});
   box.addEventListener('click',async e=>{
+    const yn=e.target.closest('.yn[data-k="bon"] button');if(yn){await setBack({on:yn.dataset.v==='1'});redraw();return}
     const b=e.target.closest('button');if(!b)return;
+    if(b.dataset.join){tgt(b.dataset.join,b.dataset.x).join=true;await save(d);redraw();return}
+    if(b.dataset.split){const o=tgt(b.dataset.split,b.dataset.x);o.join=false;await save(d);redraw();return}
     if(b.dataset.off){const o=rowOv(b.dataset.off);o.off=!o.off;if(!o.off)delete o.off;await save(d);redraw();return}
-    if(b.dataset.why!=null){const id=b.dataset.id;if(b.dataset.x){const x=ext(id);if(x)x.why=x.why===b.dataset.why?'':b.dataset.why}else{const o=rowOv(id);o.why=o.why===b.dataset.why?'':b.dataset.why}await save(d);redraw();return}
+    if(b.dataset.why!=null){const o=tgt(b.dataset.id,b.dataset.x);if(o)o.why=o.why===b.dataset.why?'':b.dataset.why;await save(d);redraw();return}
     if(b.dataset.pick){z[b.dataset.pick]=b.dataset.v;await setSetting('smItr',b.dataset.v,true);await save(d);redraw();return}
-    if(b.hasAttribute('data-xadd')){z.extra=z.extra||[];z.extra.push({id:uid(),desc:'',sng:'',are:'',plan:'',fact:'',why:''});await save(d);redraw();const ta=$$('textarea[data-x]',box).pop();if(ta)ta.focus();return}
+    if(b.hasAttribute('data-backdef')){await setBack({img:null});redraw();return}
+    if(b.hasAttribute('data-xadd')){z.extra=z.extra||[];z.extra.push({id:uid(),desc:'',sng:'',are:'',plan:'',fact:'',why:'',join:false});await save(d);redraw();const ta=$$('textarea[data-x]',box).pop();if(ta)ta.focus();return}
     if(b.dataset.xdel){z.extra=(z.extra||[]).filter(x=>x.id!==b.dataset.xdel);await save(d);redraw();return}
   });
   $('[data-docx]',w).onclick=async()=>{
-    const a=document.activeElement;if(a&&a.blur)a.blur();await new Promise(r=>setTimeout(r,60));
-    try{const blob=docxBlob(d);await shareFile(blob,`Сменное задание ${fmt(dDate(d))}.docx`,'application/vnd.openxmlformats-officedocument.wordprocessingml.document',t('sm_title'))}catch(x){alert(x.message)}
+    const a=document.activeElement;if(a&&a.blur)a.blur();await new Promise(r=>setTimeout(r,80));
+    try{const r=await docxBlob(d);if(r.backErr)toast(t('sm_back_noimg'));await shareFile(r.blob,`Сменное задание ${fmt(dDate(d))}.docx`,'application/vnd.openxmlformats-officedocument.wordprocessingml.document',t('sm_title'))}catch(x){alert(x.message)}
   };
   requestAnimationFrame(fitTA);setTimeout(fitTA,450);
 }
 
 const CSS=`
 .smg{background:var(--card);border:1.5px solid var(--line);border-radius:18px;padding:12px;margin-bottom:10px}
-.smh{display:flex;align-items:center;gap:8px;margin-bottom:8px}.smh b{flex:1;min-width:0;font-size:16px;font-weight:850}
+.smph{font-size:12.5px;font-weight:800;color:var(--sub);margin:0 2px 6px}
+.smg.multi{border-color:var(--ink);box-shadow:0 0 0 2px var(--sig) inset}
+.smshared{display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:750;color:var(--ink);background:var(--sigbg);border-radius:10px;padding:6px 10px;margin:2px 0 4px}
+.sms{font-size:12px;font-weight:800;color:var(--sub);margin:0 2px 5px}
+.smlink{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;min-height:40px;margin:-2px 0 8px;border-radius:12px;border:1.5px dashed var(--line);font-size:13px;font-weight:750;color:var(--sub);text-align:center;padding:4px 10px}
+.smg .smlink.cut{margin:10px 0 0}
+.smsum{background:var(--card);border:1.5px solid var(--line);border-radius:16px;padding:10px 12px;margin-bottom:10px}
+.smsl{display:flex;gap:8px;align-items:flex-start;padding:5px 0}.smsl>div{min-width:0}.smsl b{display:block;font-size:14px;font-weight:800}.smsl small{display:block;font-size:12.5px;color:var(--sub);font-weight:650}
+.smsl.ok .ic{color:var(--okS)}.smsl.bad .ic{color:var(--bad)}.smsl.bad small{color:var(--bad)}
+.smbk{display:flex;gap:10px;align-items:flex-start}.smbk img{width:110px;height:110px;object-fit:contain;background:#fff;border:1.5px solid var(--line);border-radius:12px;flex:none}.smbk>div{flex:1;min-width:0}
 .smp{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:6px}
 .smp label,.smq label{display:flex;align-items:center;gap:6px;background:var(--soft);border:1.5px solid var(--line);border-radius:12px;padding:0 10px;min-height:46px}
 .smp label span,.smq label span{font-size:12.5px;font-weight:800;color:var(--sub);flex:none}

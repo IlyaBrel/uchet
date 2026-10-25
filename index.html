@@ -2407,7 +2407,7 @@ function transSheet(){
 }
 
 /* ================= backup ================= */
-const SKEYS=['smItr','smItrs','smExec','smReasons','lang','reportLang','workdays','reminders','brigades','places','sections','times','lastOrigin','lastBrigade','naryads','officials','ar','myName','betaPlan'];
+const SKEYS=['smBack','smItr','smItrs','smExec','smReasons','lang','reportLang','workdays','reminders','brigades','places','sections','times','lastOrigin','lastBrigade','naryads','officials','ar','myName','betaPlan'];
 function backupPayload(){const st={};SKEYS.forEach(k=>st[k]=S[k]);return {app:'uchet',version:3,exported:new Date().toISOString(),workers:data.workers,tools:data.tools,small:data.small,trash:data.trash,days:data.days.filter(d=>d.updated||d.sites.length||d.tasks.length),types:data.types,plans:data.plans,settings:st}}
 async function markExported(){meta.dirty=0;meta.lastExport=Date.now();await put('meta',{k:'dirty',v:0});await put('meta',{k:'lastExport',v:meta.lastExport});renderBanner();renderGear()}
 async function shareFile(blob,name,type,title){
