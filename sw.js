@@ -1,4 +1,4 @@
-const V = 'uchet-v9-1';
+const V = 'uchet-v9-2';
 const FILES = ['./', './index.html', './plan.js', './smena.js', './smena/scheme.jpg', './manifest.webmanifest', './icon-192.png', './icon-512.png', './apple-touch-icon.png', './gallery/gallery.json'];
 
 self.addEventListener('install', e => {
