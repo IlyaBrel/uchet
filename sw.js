@@ -1,5 +1,5 @@
-const V = 'uchet-v10-2';
-const FILES = ['./', './index.html', './plan.js', './smena.js', './smena/scheme.jpg', './ptw.js', './naryad/rpo.xlsx', './manifest.webmanifest', './icon-192.png', './icon-512.png', './apple-touch-icon.png', './gallery/gallery.json'];
+const V = 'uchet-v11';
+const FILES = ['./', './index.html', './plan.js', './smena.js', './smena/scheme.jpg', './ptw.js', './naryad/rpo.xlsx', './naryad/tour/p1.jpg', './naryad/tour/p3.jpg', './naryad/tour/p6.jpg', './naryad/tour/p7.jpg', './naryad/tour/p8.jpg', './naryad/tour/p9.jpg', './naryad/tour/p10.jpg', './naryad/tour/p12.jpg', './naryad/tour/p17.jpg', './naryad/tour/p36.jpg', './naryad/tour/p37.jpg', './manifest.webmanifest', './icon-192.png', './icon-512.png', './apple-touch-icon.png', './gallery/gallery.json'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(V).then(c => c.addAll(FILES)).then(() => self.skipWaiting()));
@@ -39,4 +39,13 @@ self.addEventListener('fetch', e => {
       return cached || net;
     })
   );
+});
+
+// нажатие на уведомление — открыть приложение
+self.addEventListener('notificationclick', e => {
+  e.notification.close();
+  e.waitUntil(clients.matchAll({ type: 'window', includeUncontrolled: true }).then(list => {
+    for (const c of list) { if ('focus' in c) return c.focus(); }
+    return clients.openWindow ? clients.openWindow('./') : null;
+  }));
 });

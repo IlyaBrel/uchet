@@ -271,9 +271,12 @@ async function buildXlsx(n,opts){
         x=x.replace(/<definedName\b([^>]*?)localSheetId="(\d+)"([^>]*)>([\s\S]*?)<\/definedName>/g,(a,p1,id,p2,body)=>{const z=SHEETS[+id];if(!z||removed.includes(z))return '';if(z.k==='s3'){const a1=cOn('tbt1'),a2=cOn('tbt2');if(a1!==a2)body=body.replace(/\$A\$1:\$Z\$100/,()=>a1?'$A$1:$Z$50':'$A$51:$Z$100')}return `<definedName${p1}localSheetId="${kept.indexOf(z)}"${p2}>${body}</definedName>`}).replace(/<definedNames>\s*<\/definedNames>/,'');
         x=x.replace(/(<workbookView[^>]*?)\sactiveTab="\d+"/,'$1').replace(/(<workbookView[^>]*?)\sfirstSheet="\d+"/,'$1').replace(/<workbookView\b/,`<workbookView activeTab="${firstVis}" firstSheet="${firstVis}"`)}
       else if(en.name==='xl/styles.xml'){
-        if(/<numFmts\b/.test(x))x=x.replace(/<numFmts count="(\d+)">/,(a,c)=>`<numFmts count="${+c+1}">`).replace('</numFmts>','<numFmt numFmtId="190" formatCode="dd\\.mm\\.yyyy;@"/></numFmts>');
-        else x=x.replace(/(<styleSheet[^>]*>)/,'$1<numFmts count="1"><numFmt numFmtId="190" formatCode="dd\\.mm\\.yyyy;@"/></numFmts>');
-        x=x.replace(/<cellXfs[\s\S]*?<\/cellXfs>/,m=>m.replace(/<xf\b([^>]*?)numFmtId="(14|165)"([^>]*?)(\/?)>/g,(a,p1,id,p2,sl)=>{let at=p1+'numFmtId="190"'+p2;if(!/applyNumberFormat=/.test(at))at+=' applyNumberFormat="1"';else at=at.replace(/applyNumberFormat="0"/,'applyNumberFormat="1"');return `<xf${at}${sl}>`}))}
+        const NF='<numFmt numFmtId="190" formatCode="dd\\.mm\\.yyyy;@"/><numFmt numFmtId="191" formatCode="dd\\.mm\\.yy;@"/>';
+        if(/<numFmts\b/.test(x))x=x.replace(/<numFmts count="(\d+)">/,(a,c)=>`<numFmts count="${+c+2}">`).replace('</numFmts>',NF+'</numFmts>');
+        else x=x.replace(/(<styleSheet[^>]*>)/,'$1<numFmts count="2">'+NF+'</numFmts>');
+        x=x.replace(/<cellXfs[\s\S]*?<\/cellXfs>/,m=>{let i=-1;return m.replace(/<xf\b[^>]*?(?:\/>|>[\s\S]*?<\/xf>)/g,xf=>{i++;
+          if(i===472||i===669)xf=xf.replace(/<alignment([^>]*?)\/>/,(q,at)=>/shrinkToFit/.test(at)?q:`<alignment${at} shrinkToFit="1"/>`);
+          return xf})}).replace(/<cellXfs[\s\S]*?<\/cellXfs>/,m=>m.replace(/<xf\b([^>]*?)numFmtId="(14|165)"([^>]*?)(\/?)>/g,(a,p1,id,p2,sl)=>{let at=p1+'numFmtId="'+(id==='165'?'191':'190')+'"'+p2;if(!/applyNumberFormat=/.test(at))at+=' applyNumberFormat="1"';else at=at.replace(/applyNumberFormat="0"/,'applyNumberFormat="1"');return `<xf${at}${sl}>`}))}
       else if(en.name==='[Content_Types].xml'){x=x.replace(/<Override PartName="\/xl\/calcChain\.xml"[^>]*\/>/,'');x=x.replace(/<Override PartName="\/([^"]+)"[^>]*\/>/g,(a,pn)=>drop.has(pn)?'':a)}
       else{x=x.replace(/<Relationship [^>]*Target="calcChain\.xml"[^>]*\/>/,'');x=x.replace(/<Relationship [^>]*Target="(worksheets\/[^"]+)"[^>]*\/>/g,(a,tg)=>drop.has('xl/'+tg)?'':a)}
       out.push(await packEntry(en.name,enc.encode(x)));continue}
@@ -311,6 +314,8 @@ function open(nid){
   const draw=()=>{
     const ex=me(),cs=chgStat(d),days=Math.max(1,daysBetween(n.from,n.to)+1),team=d.team.map(W).filter(Boolean),hteam=d.hot.team.map(W).filter(Boolean);
     let h=`<div class="pthead"><b class="num">№ ${esc(n.num||'—')}</b><span>${fmt(n.from)} — ${fmt(n.to)} · ${t('pt_people',team.length)}${d.hot.on?' · 🔥 '+hteam.length:''}</span></div>`;
+    const gi=(d.guide&&d.guide.issue)?Object.keys(d.guide.issue).length:0;
+    h+=`<button class="gbtn2" data-a="guide">${ic('nariad',20)}<span><b>${gt('g_open')}</b><small>${gi?gt('g_progress',gi,G_ISSUE.length):gt('g_first')}</small></span>${ic('chev',18)}</button>`;
     h+=sec('main',t('pt_sec_main'),esc(d.place||''),`
       <div class="ptg3"><label><span>${t('pt_num')}</span><input data-n="num" value="${esc(n.num||'')}" autocomplete="off"></label><label><span>${t('pt_from')}</span><input type="date" data-n="from" value="${esc(n.from)}"></label><label><span>${t('pt_days')}</span><input class="num" inputmode="numeric" data-n="days" value="${days}"></label></div>
       <div class="ptg3 two"><label><span>${t('pt_t1')}</span><input type="time" data-d="t1" value="${esc(d.t1||'')}"></label><label><span>${t('pt_t2')}</span><input type="time" data-d="t2" value="${esc(d.t2||'')}"></label></div>
@@ -382,6 +387,7 @@ function open(nid){
     const od=e.target.closest('[data-offday]');if(od){const dt=od.closest('[data-date]').dataset.date;const r=d.daily[dt]=d.daily[dt]||{};r.off=!r.off;if(!r.off&&!r.s&&!r.l&&!r.e)delete d.daily[dt];await save();redraw();return}
     const un=e.target.closest('[data-undo]');if(un){const c=d.changes.find(x=>x.id===un.dataset.undo);if(!c)return;d.changes=d.changes.filter(x=>x!==c);if(c.dir==='in')d.team=d.team.filter(x=>x!==c.wid);else if(!d.team.includes(c.wid))d.team.push(c.wid);await save();redraw();return}
     const b=e.target.closest('[data-a]');if(!b||b.disabled)return;const a=b.dataset.a;
+    if(a==='guide')return guide(n.id,'issue');
     if(a==='pick')return pickPeople(t('pt_sec_team'),d.team,async ids=>{setTeam(d,ids);await save();redraw()});
     if(a==='pickhot')return pickPeople(t('pt_hot_team'),d.hot.team,async ids=>{setTeam(d,ids,true);await save();redraw()});
     if(a==='hotsame'){d.hot.team=[...d.team];await save();redraw();return}
@@ -419,6 +425,7 @@ function presetsSheet(){
 function cardHTML(n,day){
   const d=n.doc,rec=d&&d.daily[day.id]||{},plan={s:d&&d.t1||'07:00',l:d&&d.lunch||'13:00',e:d&&d.end||'16:30'};
   let h=`<div class="ptd"><span class="ptdl">${t('pt_today')}</span>${['s','l','e'].map(k=>`<button class="ptdb ${rec[k]?'on':''}" data-act="ptw" data-id="${n.id}" data-k="${k}"><small>${t('pt_d_'+k)}</small><b class="num">${esc(rec[k]||plan[k])}</b></button>`).join('')}<button class="ptdb x" data-act="ptw" data-id="${n.id}" data-k="open" aria-label="${t('pt_title')}">${ic('table',16)}<small>${t('pt_blank')}</small></button></div>`;
+  if(d){const [a,b]=dayProgress(n,day.id);h+=`<button class="gday ${a>=b?'ok':''}" data-act="ptw" data-id="${n.id}" data-k="guide">${ic(a>=b?'check':'list',17)}<span>${gt('g_day_btn',a,b)}</span><i><u style="width:${Math.round(a/b*100)}%"></u></i>${ic('chev',16)}</button>`}
   if(d&&d.team.length&&day.roll){const act=naryadsActive(day.id).filter(x=>x.doc&&x.doc.team.length);const inAny=new Set(act.flatMap(x=>x.doc.team));const out=presentIds(day).filter(id=>!inAny.has(id));
     if(out.length&&act[0]&&act[0].id===n.id)h+=`<button class="warnrow" style="margin-top:6px" data-act="ptw" data-id="${n.id}" data-k="addout">${ic('alert',18)}<span>${esc(t('pt_notin',out.map(i=>(W(i)||{name:'?'}).name.split(' ')[0]).join(', ')))} → ${t('pt_add_them')}</span></button>`}
   return h;
@@ -426,6 +433,7 @@ function cardHTML(n,day){
 async function click(el,day){
   const n=NAR(el.dataset.id);if(!n)return;const k=el.dataset.k;
   if(k==='open')return open(n.id);
+  if(k==='guide')return guide(n.id,'day');
   const d=ensureDoc(n);
   if(k==='addout'){const act=naryadsActive(day.id).filter(x=>x.doc&&x.doc.team.length);const inAny=new Set(act.flatMap(x=>x.doc.team));const out=presentIds(day).filter(id=>!inAny.has(id));
     return pickPeople(t('pt_sec_team'),d.team,async ids=>{setTeam(d,ids);await saveNar(n);renderList()},out)}
@@ -435,6 +443,200 @@ async function click(el,day){
   if(r.v==='clr')delete rec[k];else{const m=String(r.text).replace(/[^\d]/g,'');let hh,mm;if(m.length<=2){hh=+m;mm=0}else{hh=+m.slice(0,m.length-2);mm=+m.slice(-2)}if(hh>23||mm>59||isNaN(hh)){toast('⚠️');return}rec[k]=pad(hh)+':'+pad(mm)}
   if(!rec.s&&!rec.l&&!rec.e)delete d.daily[day.id];
   await saveNar(n);renderList();
+}
+
+/* ================= обучение: кто где подписывает, что проверить ================= */
+const GT={ru:{
+ g_title:'Обучение по наряду',g_open:'Кто где подписывает',g_tab_issue:'Оформление',g_tab_day:'Каждый день',g_tab_close:'Закрытие',
+ g_intro_issue:'Один раз, до начала работ. Распечатайте наряд из приложения и соберите подписи по порядку — отмечайте галочками.',
+ g_intro_day:d=>`Каждое утро и вечер по наряду. Отметки — на ${d}. Зелёные пункты приложение проверило само.`,
+ g_intro_close:'Когда работа закончена или срок наряда вышел.',
+ g_who_head:'Руководитель работ',g_who_me:'Вы — ответственный исполнитель',g_who_issuer:'Выдающий наряд',g_who_hse:'Специалист по ОТ',g_who_team:'Каждый член бригады',g_who_hot:'Бригада огневых',g_who_unit:'Руководитель подразделения',g_who_hotresp:'Ответственный за огневые',g_who_other:'Допускающий от владельца помещения',g_who_app:'В приложении',
+ g_auto:'проверено',t_check:'Проверьте',t_done:'Сделано',t_done_on:'Сделано',t_next:'Далее',t_next_ch:'Дальше',t_finish:'Готово',g_end_n:'Конец дня: выведите бригаду и распишитесь в «Допуске»',g_progress:(a,b)=>`${a} из ${b}`,g_day_btn:(a,b)=>`Проверка дня · ${a}/${b}`,g_first:'Впервые с нарядом? Откройте обучение — там по шагам, кто и где расписывается.',
+ g_warn_h:n=>`Нет допуска на высоту: ${n}`,g_warn_max:'В бригаде больше 35 человек — не поместятся в п.10',g_warn_notin:n=>`Работают, но не в бригаде: ${n}`,g_ok_all:'Все в порядке',
+ i1:['Заполнить наряд и распечатать','Приложение: номер, даты, бригада, ответственные → «Скачать Excel» → печать','app'],
+ i2:['Подпись руководителя работ','Наряд, п.1 — «Руководитель работ», графа «подпись»','head'],
+ i3:['Ваша подпись','Наряд, п.2 — «Ответственный исполнитель работ»','me'],
+ i4:['Согласование с охраной труда','Наряд, п.3 — ФИО, подпись и дата специалиста по ОТ','hse'],
+ i5:['Инструктаж бригаде — провёл','Наряд, п.10 «Состав бригады», колонка «Ознакомил, инструктаж провёл» — должность, фамилия, подпись напротив каждого','head'],
+ i6:['Инструктаж бригаде — получили','Наряд, п.10, последняя колонка — подпись каждого члена бригады','team'],
+ i7:['Отдельные указания','Наряд, п.10.1 — подписи выдающего наряд и ответственного исполнителя','issuer+me'],
+ i8:['Наряд выдал','Наряд, п.11 — подпись и дата','issuer'],
+ i9:['Наряд принял','Наряд, п.12 — подпись и дата','head'],
+ i10:['Разрешение приступить','Наряд, п.13 — «Рабочее место проверено… разрешаю приступить»: подпись и дата','head'],
+ i11:['Совмещённые работы — если есть','Наряд, п.14 — только если на территории работает другая организация: подпись допускающего','other'],
+ i12:['ППРВ — утвердить','Лист ППРВ, «УТВЕРЖДАЮ» — подпись и дата','issuer'],
+ i13:['ПСЭР — утвердить','Лист ПСЭР, «УТВЕРЖДАЮ» — подпись и дата','issuer'],
+ i14:['Ознакомление с планом спасения','Лист «ЛО ПСЭР» — подписи всех из списка и организатора собрания','team+head'],
+ i15:['Огневой наряд — выдал и подготовил','Огневой: «Наряд-допуск выдал», «Лицо, ответственное за подготовку» — подписи','issuer+head'],
+ i16:['Огневой — ответственный, ОТ и подразделение','Огневой: ответственный за проведение, регистрация специалистом ОТ, согласование руководителя подразделения — подписи и даты','hotresp+hse+unit'],
+ i17:['Огневой — противопожарный инструктаж','Огневой, п.1 — «Провёл» (подпись) и «Получил» — подписи исполнителей огневых работ','head+hot'],
+ i18:['Удостоверения при себе','У каждого в бригаде — удостоверение о допуске к работам на высоте на рабочем месте (обязательно по ППРВ)','team'],
+ d1:['Наряд действует','Срок наряда не вышел','app'],
+ d2:['Все на работе — в бригаде','Кто вышел по перекличке, должен быть в составе наряда (иначе — ввести через п.15)','app'],
+ d3:['Изменения состава — в п.15','Если сегодня кого-то ввели или вывели: строка в п.15, подпись руководителя, инструктаж новым — «провёл» и «получил»','head'],
+ d4:['Рабочее место перед началом','Леса/туры и лестницы, ограждение и знаки, 2 огнетушителя, аптечка, освещение, страховочные системы, связь','me'],
+ d5:['Динамическая оценка рисков','Лист «Допуск», строка сегодняшней даты — время и подпись','me'],
+ d6:['Инструктаж перед началом (TBT)','Лист инструктажа — подписи всех, кто работает сегодня, и организатора. Нужен лист — «Только этот лист» в разделе «Инструктажи»','team+head'],
+ d7:['Допуск бригады','Лист «Допуск»: «Бригада получила инструктаж и допущена» — время и подпись руководителя работ и ваша','head+me'],
+ d8:['Отметить начало и обед','На «Сегодня» в карточке наряда — «Начало» и «Обед»','app'],
+ d9:['Конец дня: бригада выведена','Лист «Допуск»: «Работа закончена, бригада выведена» — время и ваша подпись. В приложении — «Конец»','me'],
+ c1:['Закрытие наряда','Наряд, п.16 — подчеркнуть: «Работа выполнена в полном объёме…» или «Выявлены новые опасности…»','me'],
+ c2:['Подписи при закрытии','Наряд, п.16 — руководитель работ, лицо, выдавшее наряд, и допускающий: должность, ФИО, подпись, дата','head+issuer+other'],
+ c3:['Сдать комплект','Наряд вместе с листами допуска, инструктажей и ЛО ПСЭР — выдающему наряд','issuer'],
+ c4:['Закрыть в приложении','Окно наряда → «Закрыть наряд»: он уйдёт из напоминаний','app']
+}};
+const gt=(k,...a)=>{const v=GT.ru[k];return typeof v==='function'?v(...a):v};
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+/* ================= обучение по бланку: приближение, серым всё кроме строки, цвет по действию ================= */
+const ROLE={head:'Руководитель работ',me:'Вы — ответственный исполнитель',issuer:'Выдающий наряд',hse:'Специалист по ОТ',team:'Члены бригады',hot:'Бригада огневых',hotresp:'Ответственный за огневые',unit:'Руководитель подразделения',other:'Допускающий (владелец помещения)',app:'Приложение'};
+const TYPE={s:{c:'#16a34a',l:'Подписать'},f:{c:'#eab308',l:'Фамилия (ФИО)'},n:{c:'#0ea5e9',l:'Имена людей'},d:{c:'#f97316',l:'Дата, время'},c:{c:'#8b5cf6',l:'Проверить'},u:{c:'#ef4444',l:'Подчеркнуть'}};
+const ROWY=k=>483+59.6*k,ROWH=59.6;
+/* r: [x,y,w,h,кто,тип]  тип: a — строка (остаётся яркой), s f n d c u — см. TYPE */
+const TOUR={issue:[
+ {id:'i0',pg:1,t:'Как пользоваться',x:'Пройдём по бланку шаг за шагом. Экран сам приблизит нужную строку, остальное станет серым. Цвет рамки — что сделать:',legend:1,r:[]},
+ {id:'i1',pg:1,t:'Номер, даты и время',x:'Это вписало приложение. Сверьте номер наряда, дату выдачи, срок действия и время работ.',r:[[33,180,972,175,'app','a'],[500,180,240,52,'app','c'],[180,270,150,85,'app','d'],[515,270,185,85,'app','d']]},
+ {id:'i2',pg:1,t:'п.1 — Руководитель работ',x:'Фамилия и должность уже вписаны — проверьте. Руководитель работ расписывается в графе «подпись».',r:[[33,360,972,42,'head','a'],[370,362,220,38,'head','f'],[590,362,112,38,'head','s']]},
+ {id:'i3',pg:1,t:'п.2 — Ответственный исполнитель',x:'Это вы. Проверьте фамилию и должность, распишитесь.',r:[[33,402,972,84,'me','a'],[370,404,220,80,'me','f'],[590,404,112,80,'me','s']]},
+ {id:'i4',pg:1,t:'п.3 — Согласование с охраной труда',x:'Специалист по ОТ вписывает фамилию, расписывается и ставит дату.',r:[[33,486,972,42,'hse','a'],[515,488,185,38,'hse','f'],[700,488,118,38,'hse','s'],[822,488,183,38,'hse','d']]},
+ {id:'i5',pg:3,t:'п.10 — Состав бригады',x:'Проверьте имена: все ли, кто будет работать, вписаны, и правильно ли профессии и разряды. Ошибка — исправьте в приложении («Бригада») и выгрузите заново.',r:[[50,1095,955,345,'app','a'],[50,1095,317,345,'app','n'],[367,1095,258,345,'app','c']]},
+ {id:'i6',pg:3,t:'п.10 — Инструктаж провёл',x:'Напротив каждого: должность, фамилия, инициалы и подпись того, кто провёл целевой инструктаж.',r:[[50,1095,955,345,'head','a'],[626,1095,196,345,'head','s']]},
+ {id:'i7',pg:3,t:'п.10 — Инструктаж получил',x:'Каждый член бригады расписывается в своей строке. Таблица продолжается на следующих листах — подписи во всех заполненных строках.',r:[[50,1095,955,345,'team','a'],[822,1095,183,345,'team','s']]},
+ {id:'i8',pg:6,t:'п.10.1 — Отдельные указания',x:'Под блоком две подписи: слева — выдающий наряд, справа — вы.',r:[[30,95,975,450,'issuer','a'],[30,495,483,50,'issuer','s'],[513,495,492,50,'me','s']]},
+ {id:'i9',pg:7,t:'п.11 — Наряд выдал',x:'Фамилия и дата уже есть. Подпись выдающего наряд.',r:[[33,120,972,87,'issuer','a'],[300,120,290,87,'issuer','f'],[700,120,122,87,'issuer','s'],[822,120,183,87,'issuer','d']]},
+ {id:'i10',pg:7,t:'п.12 — Наряд принял',x:'Подпись руководителя работ, проверьте фамилию и дату.',r:[[33,262,972,48,'head','a'],[300,262,290,48,'head','f'],[700,262,122,48,'head','s'],[822,262,183,48,'head','d']]},
+ {id:'i11',pg:7,t:'п.13 — Разрешаю приступить',x:'Рабочее место проверено, меры выполнены — подпись руководителя работ.',r:[[33,452,972,50,'head','a'],[300,452,290,50,'head','f'],[700,452,122,50,'head','s'],[822,452,183,50,'head','d']]},
+ {id:'i12',pg:7,t:'п.14 — Совмещённые работы',x:'Только если на этой территории работает другая организация: её допускающий вписывает должность, фамилию, расписывается и ставит дату. Если нет — оставьте пустым.',r:[[33,665,972,50,'other','a'],[110,665,190,50,'other','f'],[300,665,290,50,'other','f'],[700,665,122,50,'other','s'],[822,665,183,50,'other','d']]},
+ {id:'i13',pg:12,t:'ППРВ — утвердить',x:'Блок «УТВЕРЖДАЮ»: подпись, фамилия уже вписана, дата.',r:[[470,95,490,270,'issuer','a'],[490,235,160,45,'issuer','s'],[690,235,255,45,'issuer','f'],[725,300,220,50,'issuer','d']]},
+ {id:'i14',pg:12,t:'Удостоверения на высоту',x:'У каждого в бригаде удостоверение о допуске к работам на высоте — при себе на рабочем месте.',r:[[33,790,910,60,'team','a'],[33,790,910,60,'team','c']]},
+ {id:'i15',pg:17,t:'ПСЭР — утвердить',x:'Блок «УТВЕРЖДАЮ» плана спасения: подпись и дата.',r:[[520,100,440,270,'issuer','a'],[530,250,155,48,'issuer','s'],[720,250,235,48,'issuer','f'],[745,322,210,45,'issuer','d']]},
+ {id:'i16',pg:36,t:'ЛО ПСЭР — имена',x:'Все, кто работает на высоте, должны быть в списке ознакомления с планом спасения.',r:[[70,453,866,380,'app','a'],[236,453,172,380,'app','n'],[643,453,180,380,'app','n']]},
+ {id:'i17',pg:36,t:'ЛО ПСЭР — подписи',x:'Каждый из списка расписывается напротив своей фамилии. Внизу — подпись организатора собрания.',r:[[70,453,866,380,'team','a'],[408,453,92,380,'team','s'],[823,453,113,380,'team','s'],[100,895,780,110,'head','a'],[713,925,160,75,'head','s']]},
+ {id:'i18',pg:37,hot:1,t:'Огневой — выдал, подготовил, проводит',x:'Три подписи: выдающий наряд, ответственный за подготовку и ответственный за проведение огневых работ.',r:[[33,283,972,47,'issuer','a'],[33,433,972,97,'head','a'],[483,283,114,47,'issuer','s'],[560,433,95,47,'head','f'],[655,433,105,47,'head','s'],[560,485,95,45,'hotresp','f'],[655,485,105,45,'hotresp','s']]},
+ {id:'i19',pg:37,hot:1,t:'Огневой — ОТ и подразделение',x:'Специалист по ОТ: фамилия, подпись, дата. Руководитель подразделения: подпись и дата.',r:[[33,530,972,52,'hse','a'],[33,687,972,46,'unit','a'],[335,530,495,52,'hse','s'],[880,530,125,52,'hse','d'],[380,687,190,46,'unit','f'],[667,687,166,46,'unit','s'],[880,687,125,46,'unit','d']]},
+ {id:'i20',pg:37,hot:1,t:'Огневой — противопожарный инструктаж',x:'Проверьте имена и профессии. «Провёл» — подпись проводившего, «Получил» — каждый исполнитель огневых работ.',r:[[40,1000,977,360,'hot','a'],[67,1000,306,360,'hot','n'],[633,1000,194,360,'head','s'],[827,1000,190,360,'hot','s']]}
+],day:[
+ {id:'d0',pg:1,t:'Наряд действует?',x:'Сегодняшняя дата должна быть не позже «Действителен до».',r:[[33,270,972,85,'app','a'],[180,318,150,37,'app','d']]},
+ {id:'d1',pg:10,t:'Инструктаж TBT — дата и имена',x:'Дата — сегодняшняя, в списке все, кто сегодня вышел. Отдельный лист: в бланке «Инструктажи и подписи» → «Только этот лист».',r:[[33,240,940,45,'app','a'],[687,247,193,33,'app','d'],[60,880,880,427,'app','a'],[160,880,233,427,'app','n'],[587,880,226,427,'app','n']]},
+ {id:'d2',pg:10,t:'Инструктаж TBT — подписи',x:'До начала работ каждый расписывается в своей строке. Внизу — организатор собрания.',r:[[60,880,880,427,'team','a'],[393,880,60,427,'team','s'],[813,880,67,427,'team','s'],[60,1315,880,60,'head','a'],[680,1325,200,50,'head','s']]},
+ {id:'d3',pg:9,t:'Допуск — оценка рисков',x:'Строка сегодняшней даты: время и подпись — проведена динамическая оценка рисков.',r:[[33,'R',950,'H','me','a'],[33,'R',90,'H','app','d'],[217,'R',74,'H','me','d'],[291,'R',109,'H','me','s']]},
+ {id:'d4',pg:9,t:'Допуск — бригада допущена',x:'Бригада получила инструктаж и допущена: время и подписи руководителя работ и ваша. В приложении нажмите «Начало».',r:[[33,'R',950,'H','head','a'],[400,'R',91,'H','head','d'],[491,'R',109,'H','head','s'],[600,'R',83,'H','me','d'],[683,'R',101,'H','me','s']]},
+ {id:'d5',pg:3,t:'Рабочее место',x:'Перед началом — по отмеченным мерам: леса и лестницы, ограждение и знаки, огнетушители, аптечка, освещение, страховочные системы, связь.',r:[[33,95,972,305,'me','a'],[33,95,972,305,'me','c']]},
+ {id:'d6',pg:7,t:'Если менялся состав — п.15',x:'Кого ввели или вывели: имена, дата и время (их вписывает приложение), подпись руководителя, инструктаж «провёл» и «получил».',r:[[33,1100,972,330,'head','a'],[67,1100,411,330,'app','n'],[478,1100,112,330,'app','d'],[590,1100,110,330,'head','s'],[700,1100,158,330,'head','s'],[858,1100,147,330,'team','s']]},
+ {id:'d7',pg:9,t:'Конец дня',x:'Работа закончена, бригада выведена: время и ваша подпись. В приложении нажмите «Конец».',r:[[33,'R',950,'H','me','a'],[784,'R',89,'H','me','d'],[873,'R',111,'H','me','s']]}
+],close:[
+ {id:'c1',pg:8,t:'п.16 — Закрытие наряда',x:'Подчеркните нужное: «Работа выполнена в полном объёме…» или «Выявлены новые опасности…».',r:[[30,720,976,85,'me','a'],[30,720,976,85,'me','u']]},
+ {id:'c2',pg:8,t:'п.16 — Подписи',x:'Руководитель работ, лицо, выдавшее наряд, и допускающий: должность, фамилия, подпись, дата.',r:[[30,827,976,275,'head','a'],[367,827,639,86,'head','s'],[367,913,639,94,'issuer','s'],[367,1007,639,95,'other','s']]},
+ {id:'c3',pg:8,t:'Сдать комплект',x:'Наряд с листами допуска, инструктажей и ЛО ПСЭР — выдающему наряд. В приложении: окно наряда → «Закрыть наряд».',r:[]}
+]};
+const G_ISSUE=TOUR.issue.filter(s=>s.id!=='i0').map(s=>s.id),G_DAY=TOUR.day.map(s=>s.id);
+function roleName(d,k){return {head:pName(d.head),me:pName(me()),issuer:pName(d.issuer),hse:pName(d.hse),team:t('pt_people',d.team.length),hot:t('pt_people',(d.hot.team||[]).length),hotresp:pName(d.hot.resp),unit:pName(d.hot.unitHead),other:'',app:''}[k]||''}
+function dayAuto(n,d,date){
+  const day=data.days.find(x=>x.id===date),rec=d.daily[date]||{},r={};
+  r.d0=date>=n.from&&date<=n.to&&!n.closed;
+  if(day&&day.roll){const inT=new Set(d.team);r.d1=d.team.length>0&&presentIds(day).every(id=>inT.has(id))}
+  if(!d.changes.some(c=>iso(new Date(c.at))===date))r.d6=true;
+  if(rec.e)r.d7=true;
+  return r;
+}
+function dayProgress(n,date){const d=ensureDoc(n),a=dayAuto(n,d,date),m=(d.dcheck||{})[date]||{};const done=G_DAY.filter(k=>a[k]||m[k]).length;return [done,G_DAY.length]}
+const PW=1075,PH=1521,SMIN=.85;
+function guide(nid,tab){
+  const n=NAR(nid);if(!n)return;const d=ensureDoc(n);d.guide=d.guide||{};d.dcheck=d.dcheck||{};
+  let ch=tab||'issue',i=0,date=iso();if(date<n.from)date=n.from;if(date>n.to)date=n.to;
+  const steps=()=>TOUR[ch].filter(s=>!(s.hot&&!d.hot.on));
+  const rowK=()=>clamp(daysBetween(n.from,date),0,14);
+  const rects=s=>s.r.map(([x,y,w,h,role,ty])=>[x,y==='R'?ROWY(rowK()):y,w,h==='H'?ROWH:h,role,ty]);
+  const store=()=>ch==='day'?(d.dcheck[date]=d.dcheck[date]||{}):(d.guide[ch]=d.guide[ch]||{});
+  const isDone=s=>{if(ch==='day'&&dayAuto(n,d,date)[s.id])return 'auto';return store()[s.id]?'on':''};
+  const el=document.createElement('div');el.className='tour';el.dir='ltr';el.lang='ru';
+  el.innerHTML=`<div class="ttop"><button class="tx" data-tclose aria-label="${t('close')}">${ic('x',22)}</button><div class="seg tchap">${[['issue',gt('g_tab_issue')],['day',gt('g_tab_day')],['close',gt('g_tab_close')]].map(([k,l])=>`<button data-tch="${k}">${l}</button>`).join('')}</div><button class="tx" data-tfit aria-label="fit">${ic('target',20)}</button></div>
+  <div class="tstage" id="tstage"><div class="tpage" id="tpage"><img id="timg" alt="" draggable="false"><div id="tfix"></div><svg class="tdim" id="tdim" viewBox="0 0 ${PW} ${PH}" preserveAspectRatio="none"></svg><div id="thl"></div></div></div>
+  <div class="tcard" id="tcard"></div>`;
+  document.body.appendChild(el);lockScroll();document.body.classList.add('plopen');requestAnimationFrame(()=>el.classList.add('open'));
+  const stage=$('#tstage',el),page=$('#tpage',el),img=$('#timg',el),fix=$('#tfix',el),dim=$('#tdim',el),hl=$('#thl',el),card=$('#tcard',el);
+  let cam={s:.3,x:0,y:0},anim=true,cur=[];
+  const apply=()=>{page.style.transition=anim?'transform .6s cubic-bezier(.32,.72,0,1)':'none';page.style.transform=`translate(${cam.x}px,${cam.y}px) scale(${cam.s})`;page.style.setProperty('--inv',(1/cam.s).toFixed(3))};
+  const union=rs=>{if(!rs.length)return null;let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;rs.forEach(([x,y,w,h])=>{x0=Math.min(x0,x);y0=Math.min(y0,y);x1=Math.max(x1,x+w);y1=Math.max(y1,y+h)});return [x0,y0,x1-x0,y1-y0]};
+  /* приблизить: читаемо (не мельче 1:1); если не влезает — встать на главный участок, остальное — пальцем */
+  const focus=(rs,full,ctx)=>{const W=stage.clientWidth,H=stage.clientHeight;
+    if(full||!rs.length){const s=Math.min(W/PW,H/PH)*.97;cam={s,x:(W-PW*s)/2,y:(H-PH*s)/2};anim=true;apply();return}
+    const U=union(rs),A=union(ctx&&ctx.length?ctx:rs),pad=22,w=U[2]+2*pad,h=U[3]+2*pad;let s=clamp(Math.min(W/w,H/h),SMIN,1.7);
+    const vw=W/s,vh=H/s,first=rs[0];
+    const ax=(c0,c1,v,a)=>c1-c0+2*pad<=v?clamp(a,c1+pad-v/2,c0-pad+v/2):c0-pad+v/2;
+    const cx=w<=vw?ax(U[0],U[0]+U[2],vw,A[0]+A[2]/2):Math.min(first[0]+first[2]/2,first[0]-pad+vw/2);
+    const cy=h<=vh?ax(U[1],U[1]+U[3],vh,A[1]+A[3]/2):first[1]-pad+vh/2;
+    cam={s,x:W/2-cx*s,y:H/2-cy*s};anim=true;apply()};
+  /* подписи к рамкам: не наезжать друг на друга и на соседние рамки, не уходить за край экрана */
+  function placeLabels(){const W=stage.clientWidth,s=cam.s,iv=1/s,placed=[],boxes=cur.filter(r=>r[5]!=='a');
+    const hit=(a,b)=>a[0]<b[0]+b[2]&&b[0]<a[0]+a[2]&&a[1]<b[1]+b[3]&&b[1]<a[1]+a[3];
+    $$('.thl[data-hk]',hl).forEach(div=>{const lab=div.querySelector('.tlab');if(!lab)return;const r=cur[+div.dataset.hk],[x,y,w,h]=r;
+      lab.style.bottom='auto';lab.style.margin='0';const g=4*iv;let lw,lh;
+      const vx0=(6-cam.x)/s,vx1=(W-6-cam.x)/s,fitX=X=>clamp(X,vx0,Math.max(vx0,vx1-lw));
+      const cands=()=>{lw=lab.offsetWidth;lh=lab.offsetHeight;return [[x-3*iv,y-lh-g],[x+w-lw,y-lh-g],[x+2*iv,y+2*iv],[x-3*iv,y+h+g],[x+2*iv,y+h-lh-2*iv],[x+w-lw,y+h+g]].map(([X,Y])=>[fitX(X),Y])};
+      const ok=([X,Y],strict)=>{const b=[X,Y,lw,lh];if(placed.some(p=>hit(p,b)))return false;if(strict&&boxes.some(o=>o!==r&&hit([o[0],o[1],o[2],o[3]],b)))return false;return true};
+      let cs=cands(),c=cs.find(c=>ok(c,1));if(!c&&lab.dataset.short&&lab.textContent!==lab.dataset.short){lab.textContent=lab.dataset.short;cs=cands();c=cs.find(c=>ok(c,1))}c=c||cs.find(c=>ok(c,0))||cs[0];placed.push([c[0],c[1],lw,lh]);
+      lab.style.left=(c[0]-x)+'px';lab.style.top=(c[1]-y)+'px'})}
+  const preload=()=>[...new Set(steps().map(s=>s.pg))].forEach(p=>{const im=new Image();im.src=`naryad/tour/p${p}.jpg`});
+  function show(){
+    const ss=steps();i=clamp(i,0,ss.length-1);const s=ss[i],rs=rects(s);cur=rs;
+    $$('[data-tch]',el).forEach(b=>b.classList.toggle('on',b.dataset.tch===ch));
+    const src=`naryad/tour/p${s.pg}.jpg`;if(!img.src.endsWith(src)){img.style.opacity=0;img.onload=()=>{img.style.opacity=1};img.src=src}
+    dim.innerHTML=rs.length?`<defs><mask id="tmk" maskUnits="userSpaceOnUse" x="0" y="0" width="${PW}" height="${PH}"><rect width="${PW}" height="${PH}" fill="#fff"/>${rs.map(([x,y,w,h])=>`<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="#000"/>`).join('')}</mask></defs><rect width="${PW}" height="${PH}" fill="rgba(112,118,128,.72)" mask="url(#tmk)"/>`:'';
+    /* картинки — образец; даты на них заменяем на даты этого наряда */
+    const dd=x=>x.split('-').reverse().join('.'),cell=(x,y,w,h,v)=>`<i style="left:${x}px;top:${y}px;width:${w}px;height:${h}px">${v}</i>`;
+    fix.innerHTML=s.pg===9?Array.from({length:15},(_,k)=>cell(34,ROWY(k)+4,80,ROWH-8,dd(addDays(n.from,k)))).join(''):s.pg===10?cell(690,244,189,40,dd(date)):'';
+    const seen=new Set();
+    hl.innerHTML=rs.map(([x,y,w,h,role,ty],k)=>{if(ty==='a')return `<div class="thl a" style="left:${x}px;top:${y}px;width:${w}px;height:${h}px"></div>`;
+      const T=TYPE[ty]||TYPE.c,nm=roleName(d,role);let lab=T.l+(ty==='s'&&nm?' · '+nm:'');const key=ty+role;if(seen.has(key))lab='';else seen.add(key);
+      return `<div class="thl ${ty}" data-hk="${k}" style="left:${x}px;top:${y}px;width:${w}px;height:${h}px;--c:${T.c};animation-delay:${.3+k*.1}s">${lab?`<span class="tlab" data-short="${esc(T.l)}">${esc(lab)}</span>`:''}</div>`}).join('');
+    const core=rs.filter(r=>r[5]!=='a');focus(core.length?core:rs,!rs.length,rs.filter(r=>r[5]==='a'));placeLabels();
+    const done=isDone(s),track=s.id!=='i0';const total=ss.filter(x=>x.id!=='i0'),dn=total.filter(x=>isDone(x)).length;
+    const types=[];core.forEach(r=>{const per=(r[5]==='s'||r[5]==='f')&&r[4]!=='app',key=per?'p'+r[4]:'t'+r[5];let q=types.find(z=>z.key===key);if(!q)types.push(q={key,per,role:r[4],tys:[],k:rs.indexOf(r)});if(!q.tys.includes(r[5]))q.tys.push(r[5])});
+    card.innerHTML=`<div class="tprog"><b class="num">${i+1} / ${ss.length}</b>${ch==='day'?`<label class="tdate">${ic('cal',14)}<input type="date" data-tdate value="${date}" min="${n.from}" max="${n.to}"></label>`:''}<span class="num">${ic('check',13)} ${dn}/${total.length}</span><i><u style="width:${Math.round((i+1)/ss.length*100)}%"></u></i></div>
+      <b class="tt">${esc(s.t)}</b><p class="tx2">${esc(s.x)}</p>
+      ${s.legend?`<div class="tleg">${Object.values(TYPE).map(T=>`<span style="--c:${T.c}"><i></i>${esc(T.l)}</span>`).join('')}</div>`:''}
+      ${types.length?`<div class="twho">${types.map(q=>{const nm=q.per?roleName(d,q.role):'',T0=TYPE[q.tys[0]]||TYPE.c;return `<button style="--c:${T0.c}" data-fk="${q.k}"><span class="tdots">${q.tys.map(ty=>`<i style="--c:${(TYPE[ty]||TYPE.c).c}"></i>`).join('')}</span><span>${q.per?`<b>${esc(ROLE[q.role]||'')}</b>${nm?` <b class="bidi tnm">${esc(nm)}</b>`:''} — ${q.tys.map(ty=>({s:'подпись',f:'фамилия',d:'дата'}[ty]||TYPE[ty].l.toLowerCase())).join(', ')}`:esc(T0.l)}</span></button>`}).join('')}</div>`:''}
+      <div class="tbtn"><button class="tb" data-tprev ${i?'':'disabled'} aria-label="‹">${ic('chevl',20)}</button>${track?`<button class="tb done ${done?'on':''}" data-tdone ${done==='auto'?'disabled':''}>${ic('check',17)} ${done==='auto'?gt('g_auto'):gt('t_done')}</button>`:'<span style="flex:1"></span>'}<button class="tb tnx" data-tnext>${i<ss.length-1?gt('t_next'):ch==='close'?gt('t_finish'):gt('t_next_ch')} ${ic('chev',18)}</button></div>`;
+  }
+  const close=()=>{el.classList.remove('open');setTimeout(()=>el.remove(),250);document.body.classList.remove('plopen');unlockScroll();if(state.tab==='today')renderList()};
+  el.addEventListener('click',async e=>{
+    if(e.target.closest('[data-tclose]'))return close();
+    if(e.target.closest('[data-tfit]')){focus([],true);return}
+    const fk=e.target.closest('[data-fk]');if(fk){const r=cur[+fk.dataset.fk];if(r)focus([r]);return}
+    const c=e.target.closest('[data-tch]');if(c){ch=c.dataset.tch;i=0;preload();show();return}
+    if(e.target.closest('[data-tprev]')){i--;show();return}
+    if(e.target.closest('[data-tnext]')){const ss=steps();if(i<ss.length-1){i++;show()}else if(ch==='issue'){ch='day';i=0;preload();show()}else if(ch==='day'){ch='close';i=0;preload();show()}else close();return}
+    const dn=e.target.closest('[data-tdone]');if(dn&&!dn.disabled){const s=steps()[i],st=store();st[s.id]=!st[s.id];if(!st[s.id])delete st[s.id];await saveNar(n);if(st[s.id]&&i<steps().length-1)i++;show();return}
+  });
+  card.addEventListener('change',e=>{if(e.target.matches('[data-tdate]')&&e.target.value){date=e.target.value;show()}});
+  const pts=new Map();let g=null;const lp=e=>{const r=stage.getBoundingClientRect();return {x:e.clientX-r.left,y:e.clientY-r.top}};
+  stage.addEventListener('pointerdown',e=>{try{stage.setPointerCapture(e.pointerId)}catch(x){}pts.set(e.pointerId,lp(e));anim=false;
+    if(pts.size===2){const [a,b]=[...pts.values()];g={pinch:1,d0:Math.max(10,Math.hypot(a.x-b.x,a.y-b.y)),m0:{x:(a.x+b.x)/2,y:(a.y+b.y)/2},c0:Object.assign({},cam)}}else g={p0:lp(e),c0:Object.assign({},cam)}});
+  stage.addEventListener('pointermove',e=>{if(!pts.has(e.pointerId)||!g)return;pts.set(e.pointerId,lp(e));
+    if(g.pinch&&pts.size>=2){const [a,b]=[...pts.values()],m={x:(a.x+b.x)/2,y:(a.y+b.y)/2},s=clamp(g.c0.s*Math.hypot(a.x-b.x,a.y-b.y)/g.d0,.15,4);const wx=(g.m0.x-g.c0.x)/g.c0.s,wy=(g.m0.y-g.c0.y)/g.c0.s;cam={s,x:m.x-wx*s,y:m.y-wy*s};apply();return}
+    if(!g.pinch){const p=lp(e);cam={s:g.c0.s,x:g.c0.x+p.x-g.p0.x,y:g.c0.y+p.y-g.p0.y};apply()}});
+  const up=e=>{pts.delete(e.pointerId);if(!pts.size)g=null;else if(g&&g.pinch){const p=[...pts.values()][0];g={p0:p,c0:Object.assign({},cam)}}};
+  stage.addEventListener('pointerup',up);stage.addEventListener('pointercancel',up);
+  stage.addEventListener('wheel',e=>{e.preventDefault();const p=lp(e),k=Math.exp(-e.deltaY*.0015),s=clamp(cam.s*k,.15,4);const wx=(p.x-cam.x)/cam.s,wy=(p.y-cam.y)/cam.s;anim=false;cam={s,x:p.x-wx*s,y:p.y-wy*s};apply()},{passive:false});
+  el.addEventListener('gesturestart',e=>e.preventDefault());
+  const onR=()=>show();window.addEventListener('resize',onR);
+  const obs=new MutationObserver(()=>{if(!document.body.contains(el)){window.removeEventListener('resize',onR);obs.disconnect()}});obs.observe(document.body,{childList:true});
+  preload();requestAnimationFrame(show);
+}
+
+/* напоминания-уведомления по наряду (вызываются раз в 30 с из приложения) */
+const nFired=new Set();
+function tickNotify(now,send){
+  const date=iso(now),hm=now.getHours()*60+now.getMinutes(),tm=s=>{const p=String(s||'').split(':').map(Number);return p[0]*60+(p[1]||0)};
+  naryadsActive(date).forEach(n=>{if(!n.doc)return;const d=n.doc,rec=d.daily[date]||{};if(rec.off)return;
+    const fire=(key,title,body)=>{const k=date+n.id+key;if(nFired.has(k))return;nFired.add(k);send(title,body)};
+    const num='№ '+(n.num||'—');
+    if(hm>=tm(d.t1||'07:00')-20&&hm<tm(d.t1||'07:00')+90){const [a,b]=dayProgress(n,date);if(a<b)fire('chk','📋 '+gt('g_title')+' '+num,gt('g_day_btn',a,b))}
+    if(!rec.s&&hm>=tm(d.t1||'07:00')+15&&hm<tm(d.t1||'07:00')+180)fire('s','⏱ '+num,t('pt_today_set','s'));
+    if(!rec.e&&hm>=tm(d.end||'16:30')&&hm<tm(d.end||'16:30')+120)fire('e','🏁 '+num,gt('g_end_n'));
+    if(daysBetween(date,n.to)===1&&hm>=tm('08:00'))fire('exp','⚠️ '+num,t('nar_end_soon',n.num||'—',t('nar_cal_tomorrow')));
+  });
 }
 
 const CSS=`
@@ -483,6 +685,62 @@ const CSS=`
 .ptdb.on{border-style:solid;border-color:var(--okS);background:var(--okbg)}.ptdb.on b{color:var(--ok)}
 .ptdb.x{flex:none;width:56px;border-style:solid;border-color:var(--ink);background:var(--sig);color:#12161c}.ptdb.x small{color:#12161c}
 .ptper.one{grid-template-columns:1fr}
+.tour{position:fixed;inset:0;z-index:60;background:#0b0e12;display:flex;flex-direction:column;opacity:0;transition:opacity .25s}.tour.open{opacity:1}
+.ttop{display:flex;align-items:center;gap:8px;padding:calc(8px + env(safe-area-inset-top)) 10px 8px}
+.tx{width:42px;height:42px;border-radius:13px;background:#1c222b;color:#fff;display:grid;place-items:center;flex:none}
+.tchap{flex:1;margin:0;background:#1c222b;border-color:#2a313b}.tchap button{color:#9aa5b4;min-height:36px;font-size:13px}.tchap button.on{background:var(--sig);color:#12161c}
+.tstage{position:relative;flex:1;min-height:0;overflow:hidden;touch-action:none;-webkit-user-select:none;user-select:none}
+.tpage{position:absolute;left:0;top:0;width:1075px;height:1521px;transform-origin:0 0;will-change:transform;background:#fff;box-shadow:0 20px 60px rgba(0,0,0,.6)}
+.tpage img{position:absolute;inset:0;width:100%;height:100%;transition:opacity .25s;pointer-events:none}
+[dir=rtl] .tour .chev{transform:none}
+#tfix{position:absolute;inset:0;pointer-events:none}
+#tfix i{position:absolute;display:flex;align-items:center;justify-content:center;background:#fff;color:#111;font:400 15px/1 "Liberation Serif","Times New Roman",Times,serif;font-style:normal}
+.tdim{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;animation:tfade .4s ease both}
+@keyframes tfade{from{opacity:0}to{opacity:1}}
+.thl{position:absolute;border:calc(3.5px*var(--inv,1)) solid var(--c);border-radius:calc(6px*var(--inv,1));pointer-events:none;animation:tin .45s cubic-bezier(.32,.72,0,1) both}
+.thl.s{background:color-mix(in srgb,var(--c) 22%,transparent);animation:tin .45s cubic-bezier(.32,.72,0,1) both,tpulse 1.6s ease-in-out .9s infinite}
+.thl.c,.thl.n,.thl.f,.thl.d,.thl.u{background:color-mix(in srgb,var(--c) 18%,transparent)}
+.thl.c{border-style:dashed}
+.thl.u{border-bottom-width:calc(7px*var(--inv,1))}
+.thl.f .tlab{color:#1c1917}
+.thl.a{border:calc(2px*var(--inv,1)) solid rgba(18,22,28,.6);border-radius:calc(3px*var(--inv,1));background:none;animation:none}
+@keyframes tin{from{opacity:0;transform:scale(1.08)}to{opacity:1;transform:none}}
+@keyframes tpulse{50%{box-shadow:0 0 0 calc(7px*var(--inv,1)) color-mix(in srgb,var(--c) 35%,transparent)}}
+.tlab{position:absolute;left:calc(-3px*var(--inv,1));bottom:100%;margin-bottom:calc(4px*var(--inv,1));white-space:nowrap;background:var(--c);color:#fff;font:800 calc(12.5px*var(--inv,1))/1.25 -apple-system,system-ui,sans-serif;padding:calc(3px*var(--inv,1)) calc(8px*var(--inv,1));border-radius:calc(7px*var(--inv,1));box-shadow:0 2px 8px rgba(0,0,0,.3)}
+.tcard{background:var(--card);color:var(--ink);border-radius:22px 22px 0 0;padding:12px 14px calc(12px + env(safe-area-inset-bottom));box-shadow:0 -10px 30px rgba(0,0,0,.35);max-height:46vh;overflow:auto}
+.tprog{display:flex;align-items:center;gap:8px;margin-bottom:8px;font-size:12.5px;font-weight:800;color:var(--sub)}.tprog b{color:var(--ink);font-size:13px}
+.tprog>span{display:inline-flex;align-items:center;gap:3px;color:var(--ok)}
+.tprog i{flex:1;height:5px;border-radius:99px;background:var(--soft);overflow:hidden}.tprog i u{display:block;height:100%;background:var(--sig);transition:width .3s}
+.tdate{display:inline-flex;align-items:center;gap:4px;color:var(--ink)}.tdate input{height:30px;min-height:30px;padding:0 6px;border-radius:8px;font-size:13px;width:auto}
+.tt{display:block;font-size:18px;font-weight:850;letter-spacing:-.01em;line-height:1.25}
+.tx2{margin:5px 0 8px;font-size:14.5px;line-height:1.45;color:var(--ink)}
+.twho,.tleg{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px}
+.twho .tdots{display:inline-flex;gap:3px;flex:none}
+.twho .tdots i{width:11px;height:11px;border-radius:4px;background:var(--c)}
+.twho button>span:last-child{min-width:0}
+.twho .tnm{white-space:nowrap}
+.twho button{border:1.5px solid color-mix(in srgb,var(--c) 50%,transparent);color:var(--ink);text-align:start;line-height:1.3}
+.twho button b{font-weight:850}
+.twho button,.tleg span{display:inline-flex;align-items:center;gap:6px;background:var(--soft);border-radius:10px;padding:5px 9px;font-size:12.5px;font-weight:700}
+.twho i,.tleg i{width:12px;height:12px;border-radius:4px;background:var(--c);flex:none}
+.tbtn{display:flex;gap:8px}.tb{white-space:nowrap;min-height:48px;border-radius:14px;border:1.5px solid var(--line);background:var(--card);font-weight:850;font-size:15px;display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:0 14px;color:var(--ink)}
+.tb[data-tprev]{width:52px;flex:none;padding:0}.tb:disabled{opacity:.35}
+.tb.done{flex:1}.tb.done.on{background:var(--okbg);border-color:var(--okS);color:var(--ok)}
+.tb.tnx{flex:1.3;background:var(--sig);border-color:#12161c;color:#12161c}
+.gbtn2{display:flex;align-items:center;gap:10px;width:100%;text-align:start;padding:11px 12px;border-radius:15px;background:var(--hero);color:#fff;margin-bottom:10px}
+.gbtn2>.ic:first-child{color:var(--sig)}.gbtn2 span{flex:1;min-width:0}.gbtn2 b{display:block;font-size:15px;font-weight:850}.gbtn2 small{display:block;font-size:12px;color:#c9d1dc;font-weight:600;line-height:1.3}
+.gday{display:flex;align-items:center;gap:8px;width:100%;text-align:start;margin-top:8px;padding:9px 10px;border-radius:12px;background:var(--card);border:1.5px solid var(--line);font-size:13.5px;font-weight:800}
+.gday span{flex:none}.gday i{flex:1;height:6px;border-radius:99px;background:var(--soft);overflow:hidden}.gday i u{display:block;height:100%;background:var(--sig)}
+.gday.ok{border-color:var(--okS);background:var(--okbg);color:var(--ok)}.gday.ok i u{background:var(--okS)}
+.gpro{display:flex;align-items:center;gap:10px;margin:0 2px 10px}.gpro b{font-size:14px;font-weight:850;flex:none}.gpro i{flex:1;height:8px;border-radius:99px;background:var(--soft);overflow:hidden}.gpro i u{display:block;height:100%;background:var(--okS);transition:width .3s}
+.gdate{display:flex;align-items:center;gap:8px;margin:0 0 10px;font-weight:800}.gdate input{height:40px;min-height:40px;max-width:180px;padding:0 10px;border-radius:10px}
+.gst{display:flex;gap:10px;align-items:flex-start;background:var(--card);border:1.5px solid var(--line);border-radius:14px;padding:10px;margin-bottom:6px}
+.gst.on{border-color:var(--okS)}.gst.on .gtx>b{color:var(--ok)}
+.gck{width:32px;height:32px;border-radius:10px;border:2px solid var(--line);display:grid;place-items:center;flex:none;font-size:13px;font-weight:850;color:var(--sub);background:var(--card)}
+.gst.on .gck{background:var(--okS);border-color:var(--okS);color:#fff}.gck:disabled{opacity:1}
+.gtx{flex:1;min-width:0}.gtx>b{display:block;font-size:14.5px;font-weight:850;line-height:1.3}.gtx>b em{font-style:normal;font-size:11px;font-weight:850;background:var(--okbg);color:var(--ok);border-radius:6px;padding:1px 6px;margin-inline-start:4px}
+.gtx p{margin:3px 0 6px;font-size:13px;line-height:1.4;color:var(--sub);font-weight:600}
+.gwho{display:flex;flex-wrap:wrap;gap:5px}.gwho span{display:inline-flex;flex-wrap:wrap;gap:4px;align-items:baseline;background:var(--soft);border-radius:9px;padding:4px 8px;font-size:12px}.gwho i{font-style:normal;color:var(--sub);font-weight:700}.gwho b{font-weight:850}
 .ptli{border:1.5px solid var(--line);border-radius:14px;padding:10px;margin-bottom:8px}.ptli.off{opacity:.6}
 .ptlh{display:flex;align-items:center;gap:8px}.ptlh b{flex:1;min-width:0;font-size:14.5px;font-weight:850}.ptlh span{flex:none;font-size:12.5px;font-weight:800;color:var(--sub)}
 .ptls{display:flex;align-items:center;gap:8px;margin:6px 0}.ptls em{font-style:normal;font-size:12px;color:var(--bad);font-weight:750}
@@ -499,5 +757,5 @@ const CSS=`
 `;
 (function(){if(document.getElementById('ptcss'))return;const st=document.createElement('style');st.id='ptcss';st.textContent=CSS;document.head.appendChild(st)})();
 
-window.PTW={init,open,SHEETS,newFromPreset,presetsSheet,cardHTML,click,lat,buildXlsx,ensureDoc,_t:{setTeam,chgStat,readZip,setCell,refreshCache,wName}};
+window.PTW={init,open,SHEETS,guide,tickNotify,dayProgress,newFromPreset,presetsSheet,cardHTML,click,lat,buildXlsx,ensureDoc,_t:{setTeam,chgStat,readZip,setCell,refreshCache,wName}};
 })();

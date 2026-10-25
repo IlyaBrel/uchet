@@ -483,6 +483,10 @@ details.more{margin-bottom:10px}details.more summary{font-weight:750;color:var(-
 .wnewi p{margin:0;font-size:14.5px;line-height:1.45}
 .narbtn{width:auto!important;padding:0 12px!important;gap:6px;display:inline-flex!important;align-items:center;font-weight:800;font-size:14px;background:var(--sig)!important;color:#12161c!important;border-color:var(--ink)!important}
 .narbtn[hidden]{display:none!important}
+.ntfb{display:flex;align-items:center;gap:10px;background:var(--hero);color:#fff;border-radius:18px;padding:10px 10px 10px 14px;margin-bottom:12px}
+.ntfb>.ic{color:var(--sig);flex:none}.ntfb span{flex:1;min-width:0;font-size:13.5px;font-weight:650;line-height:1.35}
+.ntfb button:not(.x){flex:none;min-height:38px;padding:0 14px;border-radius:11px;background:var(--sig);color:#12161c;font-weight:850}
+.ntfb .x{width:32px;height:32px;border-radius:10px;display:grid;place-items:center;color:#c9d1dc;flex:none}
 ::view-transition-old(root),::view-transition-new(root){animation-duration:.22s}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important}}
 </style>
@@ -674,11 +678,11 @@ L.ru={
  snap_cnt:(w,t,d,p)=>`Людей ${w} · инстр. ${t} · дней ${d}`+(p?` · планов ${p}`:''),
  upd_ready:'Вышло обновление приложения',upd_reload:'Обновить',
  wn_title:'Что нового',wn_ok:'Понятно',
- wn_1:'<b>План объекта (β)</b> — новая вкладка «План»: рисуете комнату пальцем, линии выравниваются, отмечаете зоны и этапы, закрашиваете сделанное за день — площадь считается сама и уходит в отчёт.',
- wn_2:'<b>В чьей группе</b> — у человека не из вашей группы можно указать бригадира. В списке они разложены по группам.',
- wn_3:'<b>Моё имя</b> в настройках — при обмене людьми получатель видит, из чьей они группы.',
- wn_4:'<b>Автокопии</b> — приложение каждый день само сохраняет копию данных в телефоне. Можно вернуться на любой из 7 дней.',
- wn_5:'Когда выходит обновление — появится кнопка «Обновить».',
+ wn_1:'<b>Наряд-допуск в Excel</b> — ваш бланк заполняется сам: номер, даты, бригада, ответственные, огневой. Кнопка «Наряд» вверху «Сегодня».',
+ wn_2:'<b>Обучение по наряду</b> — по шагам, кто и где расписывается при оформлении, что проверить каждое утро и при закрытии.',
+ wn_3:'<b>Уведомления</b> — разрешите в Настройках, и приложение напомнит отметить допуск, факт и отчёт.',
+ wn_4:'<b>Инструктажи и подписи</b> — листы TBT и ЛО ПСЭР со своими людьми, можно печатать по одному.',
+ wn_5:'<b>Сменное задание (Word)</b> — из карточки отчёта на «Сегодня».',
  beta:'Тестовые функции',beta_plan:'План объекта (β)',beta_plan_sub:'Чертёж, зоны и этапы работ — в разработке',tab_plan:'План',
  sz:'Размер копии',sz_sub:m=>`Сейчас примерно ${m} МБ · очистить старые фото`,
  sz_intro:'Копия собирается заново из того, что сейчас есть в приложении. Старые фото попадают в неё только из корзины (удалённое хранится 30 дней) и из фото чертежей в «Плане».',
@@ -689,6 +693,10 @@ L.ru={
  sz_shrink_q:'Уменьшить все фото?',sz_shrink_t:'Фото станут легче. Обратно увеличить нельзя. Перед этим сохранится автокопия данных.',sz_shrink_btn:'Уменьшить',
  sz_working:'Обрабатываю фото…',sz_done:(a,b)=>`Готово: было ${a} МБ, стало ${b} МБ`,sz_after:'Теперь сохраните новую копию — старый файл можно удалить.',sz_save_now:'Сохранить новую копию',
  trash_clear:'Очистить корзину',
+ ntf:'Уведомления',ntf_on:'Уведомления включены',ntf_off:'Уведомления не разрешены',ntf_ask:'Разрешить уведомления',ntf_test:'Проверить',ntf_test_t:'Учёт',ntf_test_b:'Так будут выглядеть напоминания',
+ ntf_st_on:'Разрешены · напоминания и наряд',ntf_st_off:'Выключены — нажмите, чтобы разрешить',ntf_st_den:'Запрещены — включите в Настройках iPhone → Уведомления → Учёт',ntf_st_no:'Добавьте приложение на экран «Домой» — тогда iPhone разрешит уведомления',
+ ntf_note:'Уведомления приходят, пока приложение открыто или недавно свёрнуто — без интернета iPhone не может разбудить закрытое приложение. Для напоминаний «по будильнику», даже когда приложение закрыто, добавьте напоминания в Календарь (Настройки → Напоминания).',
+ ntf_banner:'Включите уведомления — напомню отметить допуск, факт и отчёт',ntf_banner_btn:'Включить',
  _end:''
 };
 L.ar={
@@ -785,11 +793,11 @@ L.ar={
  snap_cnt:(w,t,d,p)=>`عمال ${w} · معدات ${t} · أيام ${d}`+(p?` · مخططات ${p}`:''),
  upd_ready:'يتوفر تحديث للتطبيق',upd_reload:'تحديث',
  wn_title:'ما الجديد',wn_ok:'حسنًا',
- wn_1:'<b>مخطط الموقع (تجريبي)</b> — تبويب «المخطط»: ارسم الغرفة بإصبعك فتستقيم الخطوط، حدد المناطق والمراحل ولوّن ما أُنجز اليوم — تُحسب المساحة وتذهب إلى التقرير.',
- wn_2:'<b>في مجموعة من</b> — للعامل من خارج مجموعتك يمكن تحديد رئيس فرقته. القائمة مقسمة حسب المجموعات.',
- wn_3:'<b>اسمي</b> في الإعدادات — عند تبادل العمال يرى المستلم من أي مجموعة هم.',
- wn_4:'<b>نسخ تلقائية</b> — يحفظ التطبيق كل يوم نسخة من البيانات في الهاتف. يمكن الرجوع إلى أي يوم من آخر 7 أيام.',
- wn_5:'عند صدور تحديث يظهر زر «تحديث».',
+ wn_1:'<b>تصريح العمل في Excel</b> — يُملأ النموذج تلقائيًا. زر «التصريح» أعلى «اليوم».',
+ wn_2:'<b>تعليم التصريح</b> — خطوة بخطوة: من يوقّع وأين، وما يُفحص كل صباح وعند الإغلاق.',
+ wn_3:'<b>الإشعارات</b> — اسمح بها في الإعدادات ليذكّرك التطبيق بالإذن والمنجز والتقرير.',
+ wn_4:'<b>الإرشادات والتوقيعات</b> — أوراق TBT والاطلاع بقوائم خاصة، يمكن طباعتها كل على حدة.',
+ wn_5:'<b>مهمة الوردية (Word)</b> — من بطاقة التقرير في «اليوم».',
  beta:'ميزات تجريبية',beta_plan:'مخطط الموقع (تجريبي)',beta_plan_sub:'مخطط وغرف ومراحل العمل — قيد التطوير',tab_plan:'المخطط',
  sz:'حجم النسخة',sz_sub:m=>`الآن تقريبًا ${m} ميغابايت · حذف الصور القديمة`,
  sz_intro:'تُجمع النسخة من جديد مما هو موجود الآن في التطبيق. الصور القديمة تدخلها فقط من السلة (المحذوفات تُحفظ 30 يومًا) ومن صور المخططات في «المخطط».',
@@ -800,6 +808,10 @@ L.ar={
  sz_shrink_q:'تصغير كل الصور؟',sz_shrink_t:'ستصبح الصور أخف. لا يمكن تكبيرها مرة أخرى. تُحفظ نسخة تلقائية قبل ذلك.',sz_shrink_btn:'تصغير',
  sz_working:'جارٍ معالجة الصور…',sz_done:(a,b)=>`تم: كان ${a} ميغابايت، أصبح ${b} ميغابايت`,sz_after:'احفظ الآن نسخة جديدة — يمكن حذف الملف القديم.',sz_save_now:'حفظ نسخة جديدة',
  trash_clear:'إفراغ السلة',
+ ntf:'الإشعارات',ntf_on:'تم تفعيل الإشعارات',ntf_off:'الإشعارات غير مسموحة',ntf_ask:'السماح بالإشعارات',ntf_test:'تجربة',ntf_test_t:'التطبيق',ntf_test_b:'هكذا ستبدو التذكيرات',
+ ntf_st_on:'مسموحة · التذكيرات والتصريح',ntf_st_off:'مطفأة — اضغط للسماح',ntf_st_den:'ممنوعة — فعّلها من إعدادات iPhone ← الإشعارات',ntf_st_no:'أضف التطبيق إلى الشاشة الرئيسية — عندها يسمح iPhone بالإشعارات',
+ ntf_note:'تصل الإشعارات ما دام التطبيق مفتوحًا أو مُصغّرًا منذ قليل — بدون إنترنت لا يستطيع iPhone إيقاظ تطبيق مغلق. للتذكير حتى والتطبيق مغلق أضف التذكيرات إلى التقويم.',
+ ntf_banner:'فعّل الإشعارات — سأذكّرك بالإذن والمنجز والتقرير',ntf_banner_btn:'تفعيل',
  _end:''
 };
 
@@ -1526,6 +1538,7 @@ function todayHTML(){
   const now=new Date(),d=getDay(iso(now)),wd=isWorkday(now)||d.workAnyway;
   let h=`<div id="hero">${heroHTML(d,wd)}</div>`;
   if(!wd)return h+tasksHTML(d);
+  if(ntfState()==='off'&&(window.navigator.standalone||matchMedia('(display-mode: standalone)').matches)&&!meta.ntfAsked)h+=`<div id="ntfb" class="ntfb">${ic('bell',20)}<span>${t('ntf_banner')}</span><button data-act="ntf-ask">${t('ntf_banner_btn')}</button><button class="x" data-act="ntf-no" aria-label="x">${ic('x',16)}</button></div>`;
   h+=peopleHTML(d)+nariadHTML(d)+`<div id="card-sites">${sitesHTML(d)}</div>`;
   if(d.sites.length)h+=reportHTML(d);
   return h+tasksHTML(d);
@@ -1629,6 +1642,8 @@ async function todayClick(e){
       await persistDay(d);return renderList()}
     case 'copy':return copyText(d.reportEdit||genReport(d,S.reportLang));
     case 'wa':return sendWA(d);
+    case 'ntf-ask':meta.ntfAsked=1;put('meta',{k:'ntfAsked',v:1});return askNotify();
+    case 'ntf-no':meta.ntfAsked=1;put('meta',{k:'ntfAsked',v:1});{const b=$('#ntfb');if(b)b.remove()}return;
     case 'smena':return SM.open(d.id);
     case 'rep-edit':return reportEditSheet(d);
     case 'sent':if(d.sent){d.sent=false;d.sentAt=0;await persistDay(d);renderList()}else await markSent(d);return;
@@ -2544,9 +2559,9 @@ async function sizeSheet(){
 }
 
 /* ================= v8: what's new & update prompt ================= */
-const APP_VER='8';
+const APP_VER='11';
 function whatsNew(){
-  sheet({title:t('wn_title'),left:t('close'),tapOut:true,body:`<div class="wnew">${[1,2,3,4,5].map(i=>`<div class="wnewi"><span>${ic(['plan','users','edit','save','download'][i-1],20)}</span><p>${t('wn_'+i)}</p></div>`).join('')}</div><button class="btn pri wide" data-x2>${t('wn_ok')}</button>`}).addEventListener('click',e=>{if(e.target.closest('[data-x2]'))e.currentTarget.close()});
+  sheet({title:t('wn_title'),left:t('close'),tapOut:true,body:`<div class="wnew">${[1,2,3,4,5].map(i=>`<div class="wnewi"><span>${ic(['table','nariad','bell','users','send'][i-1],20)}</span><p>${t('wn_'+i)}</p></div>`).join('')}</div><button class="btn pri wide" data-x2>${t('wn_ok')}</button>`}).addEventListener('click',e=>{if(e.target.closest('[data-x2]'))e.currentTarget.close()});
 }
 function updBar(){
   if($('#updbar'))return;
@@ -2617,6 +2632,7 @@ function moreSheet(){
     <div class="tgrid">${[['start','t_start'],['lunchFrom','t_lunch_from'],['lunchTo','t_lunch_to'],['end','t_end']].map(([k,l])=>`<label><span>${t(l)}</span><input type="time" data-tm="${k}" value="${esc(T[k]||'')}"></label>`).join('')}</div>
     <div class="hint" style="margin:0 4px 14px">${t('t_hint')}</div>
     <button class="menu" data-m="rem"><div>${t('reminders')}<small>${t('reminders_sub',S.reminders.length)}</small></div>${ic('bell',20)}</button>
+    <button class="menu" data-m="ntf"><div>${t('ntf')}<small>${t('ntf_st_'+ntfState())}</small></div>${ic('bell',20)}</button>
     <div class="lab" style="margin-top:14px">${t('sections')}</div>
     <button class="menu" data-m="naryads"><div>${t('naryads')}<small>${t('naryads_sub')}</small></div>${ic('nariad',20)}</button>
     <button class="menu" data-m="offs"><div>${t('officials')}<small>${t('officials_sub',(S.officials||[]).length)}</small></div>${ic('users',20)}</button>
@@ -2638,7 +2654,7 @@ function moreSheet(){
   const w=sheet({title:t('more'),body,left:t('close'),tapOut:true,onClose:()=>render()});
   w.addEventListener('click',async e=>{
     const m=e.target.closest('[data-m]');
-    if(m){({size:sizeSheet,snaps:snapsSheet,wn:whatsNew,rem:remSheet,backup:exportBackup,sc:shortcutSheet,summary:summarySheet,archive:archiveSheet,types:typesSheet,trash:trashSheet,stats:statsSheet,tabel:tabelSheet,import:importSheet,naryads:naryadsListSheet,offs:officialsSheet,ext:extReportSheet,trans:transSheet,brig:brigadesSheet,dict:dictSheet})[m.dataset.m]();return}
+    if(m){({ntf:ntfSheet,size:sizeSheet,snaps:snapsSheet,wn:whatsNew,rem:remSheet,backup:exportBackup,sc:shortcutSheet,summary:summarySheet,archive:archiveSheet,types:typesSheet,trash:trashSheet,stats:statsSheet,tabel:tabelSheet,import:importSheet,naryads:naryadsListSheet,offs:officialsSheet,ext:extReportSheet,trans:transSheet,brig:brigadesSheet,dict:dictSheet})[m.dataset.m]();return}
     const be=e.target.closest('[data-beta] button');
     if(be){const on=be.dataset.v==='1';be.parentElement.dataset.v=on?1:0;await setSetting('betaPlan',on);applyLang();return}
     const dd=e.target.closest('#wdays button');
@@ -2661,12 +2677,38 @@ function moreSheet(){
   })();
 }
 
+/* ================= notifications ================= */
+const canNotify=()=>'Notification' in window;
+const ntfState=()=>!canNotify()?'no':Notification.permission==='granted'?'on':Notification.permission==='denied'?'den':'off';
+async function notify(title,body,tag){
+  try{if(ntfState()!=='on')return false;
+    const reg=navigator.serviceWorker&&await navigator.serviceWorker.getRegistration();
+    if(reg&&reg.showNotification){await reg.showNotification(title,{body,tag:tag||title,icon:'icon-192.png',badge:'icon-192.png',data:{url:location.href.split('#')[0]}});return true}
+    new Notification(title,{body,tag,icon:'icon-192.png'});return true}catch(e){return false}
+}
+async function askNotify(){
+  if(!canNotify()){alert(t('ntf_st_no'));return}
+  let r=Notification.permission;if(r==='default')try{r=await Notification.requestPermission()}catch(e){}
+  toast(r==='granted'?t('ntf_on'):t('ntf_off'));if(r==='granted')notify(t('ntf_test_t'),t('ntf_test_b'),'test');
+  const b=$('#ntfb');if(b)b.remove();const m=$('.host [data-ntfst]');if(m)m.textContent=t('ntf_st_'+ntfState());
+}
+function ntfSheet(){
+  const st=ntfState();
+  const w=sheet({title:t('ntf'),left:t('close'),tapOut:true,body:`<div class="note">${t('ntf_note')}</div>
+    <div class="menu" style="cursor:default"><div>${t('ntf')}<small data-ntfst>${t('ntf_st_'+st)}</small></div>${ic('bell',20)}</div>
+    ${st==='off'||st==='no'?`<button class="btn pri wide" data-ask>${ic('bell',18)} ${t('ntf_ask')}</button>`:''}
+    ${st==='on'?`<button class="btn wide" data-test>${ic('send',18)} ${t('ntf_test')}</button>`:''}
+    <button class="btn wide" style="margin-top:10px" data-rem>${ic('cal',18)} ${t('reminders')}</button>`});
+  w.addEventListener('click',e=>{if(e.target.closest('[data-ask]'))askNotify().then(()=>{w.close();setTimeout(ntfSheet,420)});if(e.target.closest('[data-test]'))notify(t('ntf_test_t'),t('ntf_test_b'),'test').then(ok=>toast(ok?t('ntf_on'):t('ntf_off')));if(e.target.closest('[data-rem]'))remSheet()});
+}
+
 /* ================= in-app reminders ================= */
 const fired=new Set();
 function tick(){
   const now=new Date(),hhmm=pad(now.getHours())+':'+pad(now.getMinutes());
   if(isWorkday(now)||getDay(iso()).workAnyway){
-    S.reminders.forEach(r=>{const key=iso()+r.id+r.time;if(r.time===hhmm&&!fired.has(key)){fired.add(key);toast('🔔 '+t('rk_'+r.kind))}});
+    S.reminders.forEach(r=>{const key=iso()+r.id+r.time;if(r.time===hhmm&&!fired.has(key)){fired.add(key);toast('🔔 '+t('rk_'+r.kind));notify('🔔 '+t('rk_'+r.kind),t('cal_name'),'rem-'+r.kind)}});
+    if(window.PTW&&PTW.tickNotify)try{PTW.tickNotify(now,(ti,b)=>{toast(ti+' · '+b);notify(ti,b)})}catch(e){}
   }
   if(state.tab==='today'&&!$('.host')&&!(document.activeElement&&document.activeElement.matches('input,textarea'))){const h=$('#hero');if(h)h.innerHTML=heroHTML(getDay(iso()),isWorkday(now)||getDay(iso()).workAnyway)}
 }
