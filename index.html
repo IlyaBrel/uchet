@@ -502,6 +502,7 @@ details.more{margin-bottom:10px}details.more summary{font-weight:750;color:var(-
 
 <script src="plan.js"></script>
 <script src="smena.js"></script>
+<script src="ptw.js"></script>
 <script>
 'use strict';
 /* ================= helpers ================= */
@@ -802,6 +803,7 @@ L.ar={
 
 if(window.PL&&PL.init)try{PL.init()}catch(e){console.warn('plan init',e)}
 if(window.SM&&SM.init)try{SM.init()}catch(e){console.warn('smena init',e)}
+if(window.PTW&&PTW.init)try{PTW.init()}catch(e){console.warn('ptw init',e)}
 /* ================= settings & db ================= */
 const DEF_REM=[['07:00','nariad'],['07:30','nariad'],['08:30','nariad'],['09:00','nariad'],['13:30','nariad2'],['13:50','nariad2'],['16:10','fact'],['16:20','fact'],['17:05','report'],['17:10','report']].map(([time,kind],i)=>({id:'r'+i,time,kind}));
 let S={lang:'ru',reportLang:'ru',workdays:[6,0,1,2,3,4],reminders:clone(DEF_REM),brigades:[],places:[],sections:[],times:{start:'08:30',lunchFrom:'13:00',lunchTo:'14:00',end:''},lastOrigin:'',lastBrigade:''};
@@ -1177,7 +1179,8 @@ function workerSheet(w0){
       ${fld(t('f_cert_h'),`<input data-k="certHeight" value="${esc(s.certHeight||'')}" autocomplete="off">`)}
       ${fld(t('f_cert_e'),`<input data-k="certElectro" value="${esc(s.certElectro||'')}" autocomplete="off">`)}
       <div class="tgrid"><label><span>${t('f_cert_ot')}</span><input data-k="certOT" value="${esc(s.certOT||'')}" autocomplete="off"></label><label><span>${t('f_tabno')}</span><input data-k="tabNo" value="${esc(s.tabNo||'')}" autocomplete="off"></label></div>
-      <div class="hint">${t('cert_hint')}</div></div></div>
+      <div class="hint">${t('cert_hint')}</div>
+      ${window.PTW?`${fld(t('pt_doc_name'),`<input data-k="docName" class="bidi" value="${esc(s.docName||'')}" placeholder="${esc(/[а-яё]/i.test(s.name)?s.name:'')}" autocomplete="off" autocapitalize="words">`)}${fld(t('pt_doc_lat'),`<input data-k="docLat" dir="ltr" value="${esc(s.docLat||'')}" placeholder="${esc(PTW.lat(s.docName||(/[а-яё]/i.test(s.name)?s.name:'')))}" autocomplete="off">`,t('pt_doc_hint'))}`:''}</div></div>
     ${fld(t('f_exp'),`<textarea data-k="experience" class="bidi">${esc(s.experience)}</textarea>`)}
     <div class="fld"><label>${t('f_ppe')}</label><div id="ppe"></div>
       <div class="row"><button type="button" class="btn" data-ppe="${t('ppe_glasses')}">＋ ${t('ppe_glasses')}</button><button type="button" class="btn" data-ppe="${t('ppe_gloves')}">＋ ${t('ppe_gloves')}</button><button type="button" class="btn" data-ppe="">＋ ${t('ppe_other')}</button></div>
@@ -1194,6 +1197,7 @@ function workerSheet(w0){
     toast(isNew&&s.inGroup?t('added_group'):t('saved'));
   }});
   bindPhoto(w,s);
+  {const dn=$('[data-k="docName"]',w),dl2=$('[data-k="docLat"]',w);if(dn&&dl2)dn.addEventListener('input',()=>{dl2.placeholder=PTW.lat(dn.value)})}
   bindForm(w,s,(k,v)=>{if(k==='inGroup'){$('#ownb',w).hidden=v==='1';if(v!=='1')setTimeout(()=>{const o=$('#ownb',w);if(o)o.scrollIntoView({block:'nearest',behavior:'smooth'})},60)}});
   $('#owns',w).onclick=e=>{const b=e.target.closest('[data-own]');if(!b)return;const i=$('[data-k="owner"]',w);i.value=b.dataset.own;$('#owns',w).innerHTML=ownerChips(i.value)};
   w.addEventListener('click',e=>{const b=e.target.closest('[data-tool]');if(b)toolSheet(data.tools.find(x=>x.id===b.dataset.tool))});
@@ -1447,6 +1451,7 @@ function nariadHTML(d){
     h+=`<div class="narb"><button class="narh" data-act="nar-edit" data-id="${n.id}"><div class="narn"><b class="num">№ ${esc(n.num||'—')}</b>${n.title?`<span class="bidi">${esc(tx(n.title))}</span>`:''}</div><em class="pc ${left<=0?'n':left<=2?'warn':'gr'}">${t('nar_until',fmtShort(n.to))} · ${t('nar_left',left)}</em></button>`;
     h+=n.officials.slice().sort((a,b)=>rankOf(a)-rankOf(b)).map(o=>{const of=offById(o.oid);if(!of)return '';const sg=naryadSigned(n,d,o);
       return `<button class="sig ${sg?'on':''}" data-act="nar-sign" data-id="${n.id}" data-o="${o.oid}"><span class="chk ${sg?'on':''}">${sg?ic('check',18):''}</span><div class="sigt"><b class="bidi">${esc(of.name)}</b><small class="bidi">${esc([tx(of.role||''),t(o.mode==='once'?'sig_once':'sig_daily')].filter(Boolean).join(' · '))}</small></div><i class="rk rk${of.rank||3}">${t('rank_'+(of.rank||3))}</i></button>`}).join('')||`<div class="muted">${t('nar_no_off')}</div>`;
+    if(window.PTW)try{h+=PTW.cardHTML(n,d)}catch(e){}
     h+=`</div>`;
   });
   return h+`</section>`;
@@ -1581,6 +1586,7 @@ async function todayClick(e){
     case 'nariad':d.nariad=!d.nariad;d.nariadAt=d.nariad?Date.now():0;await persistDay(d);return renderList();
     case 'nar-new':return naryadSheet(null);
     case 'nar-edit':return naryadSheet((S.naryads||[]).find(n=>n.id===id));
+    case 'ptw':return window.PTW&&PTW.click(el,d);
     case 'nar-list':return naryadsListSheet();
     case 'nar-sign':{const n=(S.naryads||[]).find(x=>x.id===id);if(!n)return;const o=n.officials.find(x=>x.oid===el.dataset.o);if(!o)return;
       if(o.mode==='once'){o.signed=!o.signed;o.signedAt=o.signed?iso():'';await setSetting('naryads',[...S.naryads]);await persistDay(d)}
@@ -1866,6 +1872,7 @@ function naryadSheet(n0){
   <div class="lab">${t('nar_off')}</div><div id="offl">${offRows()}</div>
   <div class="lab" style="margin-top:10px">${t('off_add')}</div><div class="crow wrap" id="offd">${dir()}</div>
   <div class="hint" style="margin-bottom:14px">${t('nar_off_hint')}</div>
+  ${!isNew&&window.PTW?`<button class="btn pri wide" data-ptw>${ic('table',18)} ${t('pt_open')}</button>`:''}
   ${isNew?'':`<button class="btn wide" data-cal>${ic('cal',18)} ${t('nar_cal')}</button>${s.closed?'':`<button class="btn wide" data-close>${ic('archive',18)} ${t('nar_close')}</button>`}<button class="btn danger wide" data-del>${ic('trash',18)} ${t('del')}</button>`}`;
   const w=sheet({title:isNew?t('nar_title'):t('nar_title')+(s.num?' № '+s.num:''),body,onSave:async w=>{
     collect(w,s);if(s.to<s.from){toast(t('nar_bad_dates'));throw new Error('v')}
@@ -1879,6 +1886,7 @@ function naryadSheet(n0){
     const r=e.target.closest('[data-rmo]');if(r){s.officials=s.officials.filter(x=>x.oid!==r.dataset.rmo);return re()}
     const a=e.target.closest('[data-addo]');if(a){s.officials.push({oid:a.dataset.addo,mode:'daily',signed:false});return re()}
     if(e.target.closest('[data-newo]'))return officialSheet(null,o=>{if(o){s.officials.push({oid:o.id,mode:'daily',signed:false});re()}});
+    if(e.target.closest('[data-ptw]')){collect(w,s);const a3=[...(S.naryads||[])],i3=a3.findIndex(x=>x.id===s.id);if(i3>=0)a3[i3]=Object.assign(a3[i3],s);await setSetting('naryads',a3);w.close();setTimeout(()=>PTW.open(s.id),380);return}
     if(e.target.closest('[data-cal]')){collect(w,s);return shareFile(new Blob([naryadICS(s)],{type:'text/calendar'}),`naryad-${s.num||'x'}.ics`,'text/calendar',t('nar_title'))}
     if(e.target.closest('[data-close]')){s.closed=true;const a2=[...(S.naryads||[])],i=a2.findIndex(x=>x.id===s.id);if(i>=0)a2[i]=Object.assign(a2[i],{closed:true});await setSetting('naryads',a2);w.close();if(state.tab==='today')renderList();return}
     if(e.target.closest('[data-del]')){if(await confirmDlg(t('nar_del_q'),esc('№ '+(s.num||'—')))){await setSetting('naryads',(S.naryads||[]).filter(x=>x.id!==s.id));w.close();if(state.tab==='today')renderList()}}
@@ -1894,9 +1902,9 @@ function naryadICS(n){
 function naryadsListSheet(){
   const today=iso();
   const draw=()=>{const a=(S.naryads||[]).slice().sort((x,y)=>{const o={active:0,future:1,exp:2,closed:3};return o[naryadState(x,today)]-o[naryadState(y,today)]||y.to.localeCompare(x.to)});
-    return `<button class="btn pri wide" style="margin:0 0 12px" data-new>${ic('plus',20)} ${t('nar_title')}</button><button class="menu" data-offs><div>${t('officials')}<small>${t('officials_sub',(S.officials||[]).length)}</small></div>${ic('users',20)}</button>`+(a.map(n=>{const st=naryadState(n,today);return `<button class="srow" data-n="${n.id}"><div style="min-width:0"><b class="num">№ ${esc(n.num||'—')}</b><div class="sub bidi">${esc(tx(n.title||''))}</div><div class="sub">${fmt(n.from)} — ${fmt(n.to)} · ${n.officials.length} ${t('nar_sigs')}</div></div><span class="pc ${st==='active'?'y':st==='exp'?'n':'gr'}">${t('nar_st_'+st)}</span></button>`}).join('')||emptyHTML('nariad',t('nar_list_empty')))};
+    return `<button class="btn pri wide" style="margin:0 0 8px" data-new>${ic('plus',20)} ${t('nar_title')}</button>${window.PTW?`<div class="crow" style="margin:0 0 12px"><button class="chip" data-ptnew>${ic('layers',15)} ${t('pt_new_tpl')}</button><button class="chip" data-pttpl>${ic('list',15)} ${t('pt_tpls')}</button></div>`:''}<button class="menu" data-offs><div>${t('officials')}<small>${t('officials_sub',(S.officials||[]).length)}</small></div>${ic('users',20)}</button>`+(a.map(n=>{const st=naryadState(n,today);return `<button class="srow" data-n="${n.id}"><div style="min-width:0"><b class="num">№ ${esc(n.num||'—')}</b><div class="sub bidi">${esc(tx(n.title||''))}</div><div class="sub">${fmt(n.from)} — ${fmt(n.to)} · ${n.officials.length} ${t('nar_sigs')}</div></div><span class="pc ${st==='active'?'y':st==='exp'?'n':'gr'}">${t('nar_st_'+st)}</span></button>`}).join('')||emptyHTML('nariad',t('nar_list_empty')))};
   const w=sheet({title:t('naryads'),left:t('close'),tapOut:true,body:`<div id="nl">${draw()}</div>`,onClose:()=>{if(state.tab==='today')renderList()}});
-  $('#nl',w).onclick=e=>{if(e.target.closest('[data-new]'))return naryadSheet(null);if(e.target.closest('[data-offs]'))return officialsSheet();const b=e.target.closest('[data-n]');if(b)naryadSheet((S.naryads||[]).find(n=>n.id===b.dataset.n))};
+  $('#nl',w).onclick=e=>{if(e.target.closest('[data-new]'))return naryadSheet(null);if(e.target.closest('[data-ptnew]')){w.close();return setTimeout(()=>PTW.newFromPreset(),380)}if(e.target.closest('[data-pttpl]'))return PTW.presetsSheet();if(e.target.closest('[data-offs]'))return officialsSheet();const b=e.target.closest('[data-n]');if(b)naryadSheet((S.naryads||[]).find(n=>n.id===b.dataset.n))};
 }
 
 /* ================= archive, stats, types ================= */
@@ -2407,7 +2415,7 @@ function transSheet(){
 }
 
 /* ================= backup ================= */
-const SKEYS=['smBack','smItr','smItrs','smExec','smReasons','lang','reportLang','workdays','reminders','brigades','places','sections','times','lastOrigin','lastBrigade','naryads','officials','ar','myName','betaPlan'];
+const SKEYS=['ptwPresets','myNameLat','myPos','smBack','smItr','smItrs','smExec','smReasons','lang','reportLang','workdays','reminders','brigades','places','sections','times','lastOrigin','lastBrigade','naryads','officials','ar','myName','betaPlan'];
 function backupPayload(){const st={};SKEYS.forEach(k=>st[k]=S[k]);return {app:'uchet',version:3,exported:new Date().toISOString(),workers:data.workers,tools:data.tools,small:data.small,trash:data.trash,days:data.days.filter(d=>d.updated||d.sites.length||d.tasks.length),types:data.types,plans:data.plans,settings:st}}
 async function markExported(){meta.dirty=0;meta.lastExport=Date.now();await put('meta',{k:'dirty',v:0});await put('meta',{k:'lastExport',v:meta.lastExport});renderBanner();renderGear()}
 async function shareFile(blob,name,type,title){

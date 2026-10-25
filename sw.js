@@ -1,5 +1,5 @@
-const V = 'uchet-v9-2';
-const FILES = ['./', './index.html', './plan.js', './smena.js', './smena/scheme.jpg', './manifest.webmanifest', './icon-192.png', './icon-512.png', './apple-touch-icon.png', './gallery/gallery.json'];
+const V = 'uchet-v10';
+const FILES = ['./', './index.html', './plan.js', './smena.js', './smena/scheme.jpg', './ptw.js', './naryad/rpo.xlsx', './manifest.webmanifest', './icon-192.png', './icon-512.png', './apple-touch-icon.png', './gallery/gallery.json'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(V).then(c => c.addAll(FILES)).then(() => self.skipWaiting()));
