@@ -481,13 +481,15 @@ details.more{margin-bottom:10px}details.more summary{font-weight:750;color:var(-
 .wnewi{display:flex;gap:12px;align-items:flex-start;background:var(--card);border:1.5px solid var(--line);border-radius:16px;padding:12px}
 .wnewi span{width:38px;height:38px;border-radius:12px;background:var(--sig);color:#12161c;display:grid;place-items:center;flex:none}
 .wnewi p{margin:0;font-size:14.5px;line-height:1.45}
+.narbtn{width:auto!important;padding:0 12px!important;gap:6px;display:inline-flex!important;align-items:center;font-weight:800;font-size:14px;background:var(--sig)!important;color:#12161c!important;border-color:var(--ink)!important}
+.narbtn[hidden]{display:none!important}
 ::view-transition-old(root),::view-transition-new(root){animation-duration:.22s}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important}}
 </style>
 </head>
 <body>
 <header class="head">
-  <div class="top"><h1 id="title"></h1><div class="topb"><button id="selb" class="iconbtn" hidden></button><button id="gear" class="iconbtn"></button></div></div>
+  <div class="top"><h1 id="title"></h1><div class="topb"><button id="narb" class="iconbtn narbtn" hidden></button><button id="selb" class="iconbtn" hidden></button><button id="gear" class="iconbtn"></button></div></div>
   <div id="sw"><label class="search"><span id="sico"></span><input id="q" type="search" autocomplete="off"></label><div id="chips"></div></div>
 </header>
 <div id="banner"></div>
@@ -579,7 +581,7 @@ const ic=(n,s=20)=>`<svg class="ic ${n==='chev'||n==='chevl'?'chev':''}" width="
 /* ================= i18n ================= */
 const L={};
 L.ru={
- tab_today:'Сегодня',tab_people:'Люди',tab_tools:'Инструмент',tab_small:'Мелочь',
+ tab_today:'Сегодня',nar_short:'Наряд',tab_people:'Люди',tab_tools:'Инструмент',tab_small:'Мелочь',
  cancel:'Отмена',save:'Сохранить',close:'Закрыть',del:'Удалить',add:'Добавить',done:'Готово',ok:'OK',yes:'Есть',no:'Нет',yes2:'Да',undo:'Отменить',
  ph_workers:'Имя, арабское имя, №, профессия',ph_tools:'Название, номер, у кого',ph_small:'Поиск по названию',
  all:'Все',my_group:'Моя группа',not_group:'Не в группе',onsite:'На работе',on_me:'На мне',at_others:'У других',warehouse:'Склад',any_state:'Любое состояние',working:'Работает',broken:'Сломан',
@@ -690,7 +692,7 @@ L.ru={
  _end:''
 };
 L.ar={
- tab_today:'اليوم',tab_people:'العمال',tab_tools:'المعدات',tab_small:'مستلزمات',
+ tab_today:'اليوم',nar_short:'التصريح',tab_people:'العمال',tab_tools:'المعدات',tab_small:'مستلزمات',
  cancel:'إلغاء',save:'حفظ',close:'إغلاق',del:'حذف',add:'إضافة',done:'تم',ok:'حسنًا',yes:'يوجد',no:'لا',yes2:'نعم',undo:'تراجع',
  ph_workers:'الاسم، رقم الهوية، المهنة',ph_tools:'الاسم، الرقم، مع من',ph_small:'بحث بالاسم',
  all:'الكل',my_group:'مجموعتي',not_group:'خارج المجموعة',onsite:'في العمل',on_me:'معي',at_others:'عند غيري',warehouse:'المخزن',any_state:'أي حالة',working:'يعمل',broken:'معطّل',
@@ -964,7 +966,7 @@ function applyLang(){
   if(state.tab==='plan'&&!planOn())state.tab='today';
   $('#tabs').innerHTML=tabsList().map(([k,i,l])=>`<button data-tab="${k}"><span class="ti">${ic(i,22)}</span>${t(l)}${k==='plan'?'<i class="betab">β</i>':''}</button>`).join('');
   $$('#tabs button').forEach(b=>b.onclick=()=>switchTab(b.dataset.tab));
-  $('#gear').innerHTML=ic('sliders',22);$('#selb').innerHTML=ic('share',21);$('#selb').setAttribute('aria-label',t('share_people'));$('#sico').innerHTML=ic('search',19);$('#fab').innerHTML=ic('plus',30);
+  $('#gear').innerHTML=ic('sliders',22);$('#narb').innerHTML=ic('nariad',20)+'<span>'+t('nar_short')+'</span>';$('#selb').innerHTML=ic('share',21);$('#selb').setAttribute('aria-label',t('share_people'));$('#sico').innerHTML=ic('search',19);$('#fab').innerHTML=ic('plus',30);
 }
 function switchTab(tab){
   if(tab===state.tab){window.scrollTo({top:0,behavior:'smooth'});return}
@@ -980,6 +982,7 @@ function render(){
   $('#q').placeholder={workers:t('ph_workers'),tools:t('ph_tools'),small:t('ph_small')}[tab]||'';
   $('#wl').innerHTML=data.workers.map(w=>`<option value="${esc(w.name)}">`).join('');
   $('#tnl').innerHTML=[...new Set([...data.tools.map(x=>x.name),...GAL.items.map(i=>i.name)])].map(n=>`<option value="${esc(n)}">`).join('');
+  $('#narb').hidden=!(tab==='today'&&window.PTW);
   $('#selb').hidden=tab!=='workers';$('#selb').classList.toggle('on',!!state.sel);if(tab!=='workers')state.sel=null;
   renderChips();renderList();renderBanner();renderGear();renderSelBar();
 }
@@ -1085,6 +1088,7 @@ $('#chips').addEventListener('click',e=>{
 });
 $('#fab').onclick=()=>({workers:()=>workerSheet(),tools:()=>toolSheet(),small:()=>smallSheet(),plan:()=>PL.newSheet()})[state.tab]();
 $('#gear').onclick=moreSheet;
+$('#narb').onclick=()=>{const a=naryadsActive(iso());if(a.length===1&&window.PTW)PTW.open(a[0].id);else naryadsListSheet()};
 $('#selb').onclick=()=>{state.sel=state.sel?null:new Set();render()};
 $('#banner').addEventListener('click',e=>{const b=e.target.closest('[data-go]');if(!b)return;b.dataset.go==='backup'?exportBackup():moreSheet()});
 $('#list').addEventListener('click',async e=>{
@@ -1180,7 +1184,7 @@ function workerSheet(w0){
       ${fld(t('f_cert_e'),`<input data-k="certElectro" value="${esc(s.certElectro||'')}" autocomplete="off">`)}
       <div class="tgrid"><label><span>${t('f_cert_ot')}</span><input data-k="certOT" value="${esc(s.certOT||'')}" autocomplete="off"></label><label><span>${t('f_tabno')}</span><input data-k="tabNo" value="${esc(s.tabNo||'')}" autocomplete="off"></label></div>
       <div class="hint">${t('cert_hint')}</div>
-      ${window.PTW?`${fld(t('pt_doc_name'),`<input data-k="docName" class="bidi" value="${esc(s.docName||'')}" placeholder="${esc(/[а-яё]/i.test(s.name)?s.name:'')}" autocomplete="off" autocapitalize="words">`)}${fld(t('pt_doc_lat'),`<input data-k="docLat" dir="ltr" value="${esc(s.docLat||'')}" placeholder="${esc(PTW.lat(s.docName||(/[а-яё]/i.test(s.name)?s.name:'')))}" autocomplete="off">`,t('pt_doc_hint'))}`:''}</div></div>
+      ${window.PTW?`${fld(t('pt_doc_name'),`<input data-k="docName" class="bidi" value="${esc(s.docName||'')}" placeholder="${esc(s.name||'Иван Петров')}" autocomplete="off" autocapitalize="words">`,t('pt_doc_hint'))}`:''}</div></div>
     ${fld(t('f_exp'),`<textarea data-k="experience" class="bidi">${esc(s.experience)}</textarea>`)}
     <div class="fld"><label>${t('f_ppe')}</label><div id="ppe"></div>
       <div class="row"><button type="button" class="btn" data-ppe="${t('ppe_glasses')}">＋ ${t('ppe_glasses')}</button><button type="button" class="btn" data-ppe="${t('ppe_gloves')}">＋ ${t('ppe_gloves')}</button><button type="button" class="btn" data-ppe="">＋ ${t('ppe_other')}</button></div>
@@ -1197,7 +1201,6 @@ function workerSheet(w0){
     toast(isNew&&s.inGroup?t('added_group'):t('saved'));
   }});
   bindPhoto(w,s);
-  {const dn=$('[data-k="docName"]',w),dl2=$('[data-k="docLat"]',w);if(dn&&dl2)dn.addEventListener('input',()=>{dl2.placeholder=PTW.lat(dn.value)})}
   bindForm(w,s,(k,v)=>{if(k==='inGroup'){$('#ownb',w).hidden=v==='1';if(v!=='1')setTimeout(()=>{const o=$('#ownb',w);if(o)o.scrollIntoView({block:'nearest',behavior:'smooth'})},60)}});
   $('#owns',w).onclick=e=>{const b=e.target.closest('[data-own]');if(!b)return;const i=$('[data-k="owner"]',w);i.value=b.dataset.own;$('#owns',w).innerHTML=ownerChips(i.value)};
   w.addEventListener('click',e=>{const b=e.target.closest('[data-tool]');if(b)toolSheet(data.tools.find(x=>x.id===b.dataset.tool))});
